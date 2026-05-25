@@ -19,7 +19,12 @@ const navLinkClass =
   "relative text-[13px] tracking-[0.04em] text-muted-foreground transition-colors duration-300 hover:text-foreground after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full";
 
 export function Navbar() {
-    const itemCount = useCartStore((state) => state.items.length);
+    const itemCount = useCartStore((state) =>
+        state.items.reduce((total, item) => total + item.quantity, 0)
+      );
+
+    console.log(itemCount);
+    console.log(useCartStore.getState().items);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/85 backdrop-blur-sm supports-backdrop-filter:bg-background/75">
