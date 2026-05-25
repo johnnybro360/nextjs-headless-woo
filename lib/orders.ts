@@ -24,6 +24,18 @@ const oauth = new OAuth({
   },
 });
 
+// 1. Generate the Basic Auth header for the Local WP Live Link tunnel
+const LIVE_LINK_USER = process.env.LOCAL_LIVE_LINK_USER!;
+const LIVE_LINK_PASS = process.env.LOCAL_LIVE_LINK_PASSWORD!;
+const tunnelAuthHeader = `Basic ${Buffer.from(`${LIVE_LINK_USER}:${LIVE_LINK_PASS}`).toString("base64")}`;
+
+// 2. Prepare WooCommerce credentials to append as query parameters
+const wcAuthParams = new URLSearchParams({
+  consumer_key: process.env.WC_KEY!,
+  consumer_secret: process.env.WC_SECRET!,
+});
+
+
 function toWooAddress(
   customer: CheckoutFormData,
   includeContact: boolean
@@ -73,10 +85,16 @@ export async function createOrder(
     set_paid: false,
     billing,
     shipping,
+    meta_data: [
+      {
+        key: "_wc_order_attribution_source_type",
+        value: "nextjs-headless",
+      },
+    ],
     line_items: items.map((item) => ({
       product_id: item.id,
       quantity: item.quantity,
-      ...(item.variationId && { variation_id: item.variationId }),
+      // ...(item.variationId && { variation_id: item.variationId }),
     })),
   };
 
@@ -84,22 +102,37 @@ export async function createOrder(
     url,
     method: "POST",
   };
+  
+  console.log('payload', payload);
+  console.log('url', `${url}?${wcAuthParams.toString()}`);
 
   const authHeader = oauth.toHeader(
     oauth.authorize(requestData)
   ) as unknown as HeadersInit;
 
   try {
-    const res = await fetch(url, {
+    // const res = await fetch(url, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     ...authHeader,
+    //   },
+    //   body: JSON.stringify(payload),
+    // });
+
+    const res = await fetch(`${url}?${wcAuthParams.toString()}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...authHeader,
+        Authorization: `${tunnelAuthHeader}`,
       },
       body: JSON.stringify(payload),
     });
 
     const data = await res.json();
+
+    console.log('data', data);
+    console.log('res', res);
 
     if (!res.ok) {
       const message =

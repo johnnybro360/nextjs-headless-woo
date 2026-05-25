@@ -56,7 +56,6 @@ export function CheckoutPage() {
 
   const hasHydrated = useCartHydrated();
   const items = useCartStore((state) => state.items);
-  const clearCart = useCartStore((state) => state.clearCart);
 
   const {
     register,
@@ -110,12 +109,12 @@ export function CheckoutPage() {
       country: values.country,
     });
 
+    console.log('result', result);
+
     if (!result.success) {
       setSubmitError(result.error);
       return;
     }
-
-    clearCart();
 
     if (result.paymentUrl) {
       window.location.assign(result.paymentUrl);

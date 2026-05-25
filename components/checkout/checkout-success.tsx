@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCartStore } from "@/stores/cart-store";
+import { useEffect } from "react";
 
 interface CheckoutSuccessProps {
   orderId?: string;
@@ -13,6 +17,14 @@ export function CheckoutSuccess({
   orderNumber,
   total,
 }: CheckoutSuccessProps) {
+  const clearCart = useCartStore(
+    (state) => state.clearCart
+  );
+
+  useEffect(() => {
+    clearCart();
+  }, [clearCart]);
+
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col items-center px-4 py-20 text-center sm:py-28">
       <div className="flex size-20 items-center justify-center rounded-full border border-border/60 bg-primary/[0.06]">
