@@ -22,9 +22,12 @@ type PageProps = {
 //   };
 // }
 
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
+    console.log('slug',slug);
     const product = await getProductBySlug(slug);
+    console.log('product',product);
   
     if (!product) {
       return { title: "Product Not Found | Ember & Oak" };
