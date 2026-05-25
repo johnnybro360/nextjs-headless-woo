@@ -1,5 +1,6 @@
 "use client";
 
+import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/stores/cart-store";
 
@@ -129,6 +130,28 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   return (
     <article className="w-full max-w-7xl mx-auto">
+      <Script
+        id="product-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.fullName,
+            description: product.description,
+            image: product.imageSrc,
+            sku: product.id,
+            offers: {
+              "@type": "Offer",
+              price: product.price,
+              priceCurrency: "USD",
+              availability: product.inStock
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+            },
+          }),
+        }}
+      />
       <Breadcrumb className="mb-10 md:mb-14">
         <BreadcrumbList className="text-[13px] text-muted-foreground">
           <BreadcrumbItem>

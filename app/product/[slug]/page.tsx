@@ -8,19 +8,51 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
+// export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+//   const { slug } = await params;
+//   const product = await getProductBySlug(slug);
+
+//   if (!product) {
+//     return { title: "Product Not Found | Ember & Oak" };
+//   }
+
+//   return {
+//     title: `${product.fullName} | Ember & Oak`,
+//     description: product.description,
+//   };
+// }
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const product = await getProductBySlug(slug);
-
-  if (!product) {
-    return { title: "Product Not Found | Ember & Oak" };
+    const { slug } = await params;
+    const product = await getProductBySlug(slug);
+  
+    if (!product) {
+      return { title: "Product Not Found | Ember & Oak" };
+    }
+  
+    return {
+      title: `${product.fullName} | Ember & Oak`,
+      description: product.description,
+  
+      openGraph: {
+        title: product.fullName,
+        description: product.description,
+        images: [product.imageSrc],
+        type: "website",
+      },
+  
+      twitter: {
+        card: "summary_large_image",
+        title: product.fullName,
+        description: product.description,
+        images: [product.imageSrc],
+      },
+  
+      alternates: {
+        canonical: `${process.env.PROD_URL}/shop/${product.slug}`,
+      },
+    };
   }
-
-  return {
-    title: `${product.fullName} | Ember & Oak`,
-    description: product.description,
-  };
-}
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
