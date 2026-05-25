@@ -37,7 +37,7 @@ export function Hero() {
                 asChild
                 size="lg"
                 className={cn(
-                  "h-12 w-full rounded-sm sm:h-14 sm:w-auto sm:min-w-[12.5rem]",
+                  "h-12 w-full rounded-sm sm:h-14 sm:w-auto sm:min-w-12.5rem",
                   "text-[13px] tracking-[0.16em] uppercase shadow-none",
                   "transition-all duration-300 hover:brightness-[1.03]"
                 )}
@@ -52,7 +52,7 @@ export function Hero() {
                 size="lg"
                 className={cn(
                   "h-12 w-full rounded-sm sm:h-14 sm:w-auto",
-                  "text-[13px] tracking-[0.1em] uppercase text-muted-foreground",
+                  "text-[13px] tracking-0.1em uppercase text-muted-foreground",
                   "hover:bg-transparent hover:text-foreground"
                 )}
               >
@@ -76,9 +76,9 @@ export function Hero() {
             </ul>
           </div>
 
-          <div className="flex-1 lg:max-w-[34rem] lg:justify-self-end">
+          <div className="flex-1 lg:max-w-34rem lg:justify-self-end">
             <div className="relative mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-muted/25 ring-1 ring-border/60 sm:aspect-square lg:aspect-[4/5]">
+              <div className="relative aspect-4/5 overflow-hidden rounded-sm bg-muted/25 ring-1 ring-border/60 sm:aspect-square lg:aspect-[4/5]">
                 <Image
                   src="/images/chilli-sauce.jpg"
                   alt="Artisan chilli sauce bottle"

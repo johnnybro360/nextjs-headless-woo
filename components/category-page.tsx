@@ -8,11 +8,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getProductCardData } from "@/lib/products";
+import { getProducts } from "@/lib/products";
 import { productListingGridClassName } from "@/components/product-grid";
+import { ProductViewModel } from "@/types/productViewModel";
 
-export function CategoryPage() {
-  const products = getProductCardData();
+export async function CategoryPage() {
+  const products = await getProducts({params: {options: undefined}});
 
   return (
     <div className="w-full max-w-7xl mx-auto">
@@ -38,11 +39,11 @@ export function CategoryPage() {
           Explore our curated collection of small-batch, handcrafted hot sauces sourced from
           artisan producers around the world.
         </p>
-        <p className="mt-6 text-label">{products.length} products</p>
+        <p className="mt-6 text-label">{products?.length} products</p>
       </div>
 
       <div className={productListingGridClassName}>
-        {products.map((product) => (
+        {products?.map((product: ProductViewModel) => (
           <ProductCard
             key={product.slug}
             slug={product.slug}
@@ -50,7 +51,7 @@ export function CategoryPage() {
             origin={product.origin}
             description={product.description}
             price={product.price}
-            volume={product.volume}
+            // volume={product.volume}
             imageSrc={product.imageSrc}
             heat={product.heat}
           />

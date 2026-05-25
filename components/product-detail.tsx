@@ -1,5 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/stores/cart-store";
+
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,7 +28,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import type { Product, ProductBadge } from "@/lib/products";
+import type { ProductBadge, ProductViewModel } from "@/types/productViewModel";
 import { cn } from "@/lib/utils";
 
 const badgeIcons = {
@@ -43,7 +46,7 @@ const tabTriggerClass = cn(
   "hover:border-foreground/12 hover:bg-muted/20 hover:text-foreground/62",
   "data-[state=active]:border-primary data-[state=active]:bg-primary/[0.04]",
   "data-[state=active]:font-medium data-[state=active]:text-foreground",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20"
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20",
 );
 
 const tabIndexClass =
@@ -53,7 +56,7 @@ const tabsContentClass = cn(
   "w-full flex-none outline-none",
   "text-[15px] leading-[1.85] text-muted-foreground sm:text-base",
   "border-t border-border/40 pt-8",
-  "md:border-t-0 md:border-l md:border-border/35 md:pt-0 md:pl-10 lg:pl-14"
+  "md:border-t-0 md:border-l md:border-border/35 md:pt-0 md:pl-10 lg:pl-14",
 );
 
 const sectionGap = "mt-12 lg:mt-14";
@@ -75,22 +78,54 @@ function ProductBadgeItem({ badge }: { badge: ProductBadge }) {
 }
 
 interface ProductDetailProps {
-  product: Product;
+  product: ProductViewModel;
 }
 
 export function ProductDetail({ product }: ProductDetailProps) {
-  const defaultSize =
-    product.sizes.find((s) => s.label === product.volume) ?? product.sizes[0];
+  const addItem = useCartStore((state) => state.addItem);
 
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState(defaultSize);
+  const router = useRouter();
+
+  const handleAddToCart = () => {
+    addItem({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      size: product.size,
+      quantity: quantity,
+      imageSrc: product.imageSrc,
+    });
+
+    router.push("/cart");
+  };
+
   const [quantity, setQuantity] = useState(1);
+
+  console.log(product);
+  console.log("product.images", product.images);
+  console.log("product.badges", product.badges);
+  console.log("product.imgSrc", product.imageSrc);
+  //   console.log('product.compareAtPrice',product.compareAtPrice);
+  //   console.log('product.price',product.price);
+  //   console.log('product.inStock',product.inStock);
+  //   console.log('product.stockCount',product.stockCount);
+  //   console.log('product.size',product.size);
+  //   console.log('product.origin',product.origin);
+  //   console.log('product.fullName',product.fullName);
+  //   console.log('product.description',product.description);
+  //   console.log('product.longDescription',product.longDescription);
+  //   console.log('product.details',product.details);
+  //   console.log('product.ingredients',product.ingredients);
+  //   console.log('product.shipping',product.shipping);
+  //   console.log('product.attributes',product.attributes);
+  //   console.log('product.variations',product.variations);
 
   const discountPercent =
     product.compareAtPrice &&
     Math.round((1 - product.price / product.compareAtPrice) * 100);
 
-  const displayPrice = selectedSize.price;
+  const displayPrice = product.price;
 
   return (
     <article className="w-full max-w-7xl mx-auto">
@@ -121,10 +156,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link
-                href={`/shop/${product.categorySlug}`}
+                href={`/shop/${product.category[0].slug}`}
                 className="transition-colors duration-300 hover:text-foreground"
               >
-                {product.category}
+                {product.category[0].name}
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
@@ -142,43 +177,43 @@ export function ProductDetail({ product }: ProductDetailProps) {
         <div className="space-y-3 lg:space-y-4">
           <div
             className={cn(
-              "relative aspect-[4/5] overflow-hidden rounded-sm",
+              "relative aspect-4/5 overflow-hidden rounded-sm",
               "bg-muted/20 ring-1 ring-border/60",
-              "min-h-[24rem] sm:min-h-[28rem] lg:min-h-[34rem] xl:min-h-[38rem]",
+              "min-h-24 sm:min-h-28 lg:min-h-34 xl:min-h-38",
             )}
           >
             <Image
-              src={product.images[selectedImage] ?? product.imageSrc}
+              src={product.imageSrc}
               alt={product.fullName}
               fill
               className="object-cover object-center transition-opacity duration-500"
               sizes="(max-width: 1024px) 100vw, 60vw"
               priority
+              loading="eager"
+              unoptimized={true}
             />
           </div>
 
-          {product.images.length > 1 && (
+          {product.images?.length > 1 && (
             <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
-              {product.images.map((img, i) => (
+              {product.images?.map((img, i) => (
                 <button
                   key={i}
                   type="button"
-                  onClick={() => setSelectedImage(i)}
                   aria-label={`View image ${i + 1}`}
-                  aria-pressed={selectedImage === i}
                   className={cn(
                     "relative aspect-square overflow-hidden rounded-sm bg-muted/20 ring-1 transition-all duration-300",
-                    selectedImage === i
-                      ? "ring-primary"
-                      : "ring-border/60 opacity-55 hover:opacity-100 hover:ring-primary/35",
                   )}
                 >
                   <Image
-                    src={img}
+                    src={img ?? ""}
                     alt={`${product.name} view ${i + 1}`}
                     fill
                     className="object-cover object-center"
                     sizes="80px"
+                    priority
+                    loading="eager"
+                    unoptimized={true}
                   />
                 </button>
               ))}
@@ -192,15 +227,15 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <p className="text-label">{product.origin}</p>
             <h1
               className={cn(
-                "mt-4 font-display text-[2.35rem] leading-[1.06] tracking-[0.025em] text-balance",
+                "mt-4 font-display text-2.35rem leading-1.06 tracking-0.025em text-balance",
                 "sm:text-[2.75rem] lg:text-[3rem] xl:text-[3.25rem]",
               )}
             >
               {product.fullName}
             </h1>
-            {product.badges.length > 0 && (
+            {product.badges?.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-2">
-                {product.badges.map((badge) => (
+                {product.badges?.map((badge) => (
                   <ProductBadgeItem key={badge.label} badge={badge} />
                 ))}
               </div>
@@ -219,26 +254,25 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 ${displayPrice}
               </span>
               <span className="text-sm text-muted-foreground">
-                {selectedSize.label}
+                {product.name}
               </span>
             </div>
 
-            {product.compareAtPrice &&
-              selectedSize.label === product.volume && (
-                <div className="mt-2 flex flex-wrap items-center gap-3">
-                  <span className="text-sm text-muted-foreground line-through">
-                    ${product.compareAtPrice}
-                  </span>
-                  {discountPercent && (
-                    <Badge
-                      variant="outline"
-                      className="border-primary/25 bg-transparent text-primary"
-                    >
-                      {discountPercent}% Off
-                    </Badge>
-                  )}
-                </div>
-              )}
+            {product.compareAtPrice && (
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <span className="text-sm text-muted-foreground line-through">
+                  ${product.compareAtPrice}
+                </span>
+                {discountPercent && (
+                  <Badge
+                    variant="outline"
+                    className="border-primary/25 bg-transparent text-primary"
+                  >
+                    {discountPercent}% Off
+                  </Badge>
+                )}
+              </div>
+            )}
 
             <p className="mt-4 flex items-center gap-2 text-sm">
               {product.inStock ? (
@@ -270,31 +304,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
               "max-w-md text-[15px] leading-[1.9] text-muted-foreground sm:text-base",
             )}
           >
-            {product.longDescription}
+            {product.description}
           </p>
 
-          {/* Size */}
           <div className={sectionGap}>
             <p className="text-label mb-4">Size</p>
             <div className="flex flex-wrap gap-2">
-              {product.sizes.map((size) => (
-                <button
-                  key={size.label}
-                  type="button"
-                  onClick={() => setSelectedSize(size)}
-                  className={cn(
-                    "rounded-sm border px-4 py-2.5 text-left transition-all duration-300",
-                    selectedSize.label === size.label
-                      ? "border-primary text-foreground"
-                      : "border-border/70 text-muted-foreground hover:border-foreground/25 hover:text-foreground",
-                  )}
-                >
-                  <span className="block text-sm">{size.label}</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    ${size.price}
-                  </span>
-                </button>
-              ))}
+              <span className="block text-sm">{product.size}</span>
+              {/* <span className="mt-0.5 block text-xs text-muted-foreground">
+                ${product.price}
+              </span> */}
             </div>
           </div>
 
@@ -307,24 +326,24 @@ export function ProductDetail({ product }: ProductDetailProps) {
           >
             <p className="text-label mb-4">Quantity</p>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
-              <div className="inline-flex h-14 w-full max-w-[10rem] items-stretch rounded-sm border border-border/70 sm:w-auto">
+              <div className="inline-flex h-14 shrink-0 items-stretch rounded-sm border border-border/70">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={!product.inStock}
-                  className="flex flex-1 items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-35"
+                  className="flex w-12 items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-35"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="size-4" strokeWidth={1.25} />
                 </button>
-                <span className="flex min-w-12 flex-1 items-center justify-center border-x border-border/70 text-sm font-medium tabular-nums">
+                <span className="flex min-w-12 items-center justify-center border-x border-border/70 px-3 text-sm font-medium tabular-nums">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => q + 1)}
                   disabled={!product.inStock}
-                  className="flex flex-1 items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-35"
+                  className="flex w-12 items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-35"
                   aria-label="Increase quantity"
                 >
                   <Plus className="size-4" strokeWidth={1.25} />
@@ -342,9 +361,13 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   product.inStock && "hover:brightness-[1.04]",
                 )}
               >
-                <Link href="/cart">
+                {/* <Link href="/cart">
                   {product.inStock ? "Add to Cart" : "Sold Out"}
-                </Link>
+                </Link> */}
+
+                <button onClick={handleAddToCart} disabled={!product.inStock}>
+                  {product.inStock ? "Add to Cart" : "Sold Out"}
+                </button>
               </Button>
             </div>
           </div>
@@ -383,7 +406,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             >
               <TabsList
                 variant="line"
-                className="!flex h-auto w-full shrink-0 flex-col items-stretch gap-0.5 bg-transparent p-0 md:w-48 lg:w-52"
+                className="flex! h-auto w-full shrink-0 flex-col items-stretch gap-0.5 bg-transparent p-0 md:w-48 lg:w-52"
               >
                 <TabsTrigger value="details" className={tabTriggerClass}>
                   <span className={tabIndexClass}>01</span>

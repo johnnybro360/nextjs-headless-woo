@@ -1,34 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { mockCartItems, type MockCartLineItem } from "@/lib/cart-mock";
 import { CartEmptyState } from "@/components/cart/cart-empty-state";
 import { CartLineItem } from "@/components/cart/cart-line-item";
 import { CartOrderSummary } from "@/components/cart/cart-order-summary";
+import { useCartHydrated } from "@/hooks/use-cart-hydrated";
+import { useCartStore } from "@/stores/cart-store";
 
 export function CartPage() {
-  const [items, setItems] = useState<MockCartLineItem[]>(mockCartItems);
+  const hasHydrated = useCartHydrated();
 
-  const itemCount = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity, 0),
-    [items]
+  const items = useCartStore((state) => state.items);
+
+  const itemCount = useCartStore((state) =>
+    state.items.reduce((sum, item) => sum + item.quantity, 0)
   );
 
-  const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [items]
+  const subtotal = useCartStore((state) =>
+    state.items.reduce((acc, item) => acc + item.price * item.quantity, 0),
   );
 
-  const handleQuantityChange = (id: string, quantity: number) => {
-    setItems((current) =>
-      current.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
-  };
 
-  const handleRemove = (id: string) => {
-    setItems((current) => current.filter((item) => item.id !== id));
-  };
-
+  if (!hasHydrated) {
+    return null;
+  }
+  
   if (items.length === 0) {
     return <CartEmptyState />;
   }
@@ -50,11 +45,7 @@ export function CartPage() {
           <ul className="divide-y-0">
             {items.map((item) => (
               <li key={item.id}>
-                <CartLineItem
-                  item={item}
-                  onQuantityChange={handleQuantityChange}
-                  onRemove={handleRemove}
-                />
+                <CartLineItem item={item} />
               </li>
             ))}
           </ul>

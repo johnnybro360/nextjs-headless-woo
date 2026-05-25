@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export function ProductCardSkeleton() {
   return (
     <Card className="w-full max-w-sm overflow-hidden border-0 shadow-none gap-0 py-0">
-      <Skeleton className="aspect-[4/5] w-full" />
+      <Skeleton className="aspect-4/5 w-full" />
       <CardContent className="space-y-3 px-0 pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-2 flex-1">

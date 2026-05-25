@@ -1,6 +1,7 @@
 import { ProductCard } from "@/components/product-card";
-import { getProductCardData } from "@/lib/products";
+import { ProductViewModel } from "@/types/productViewModel";
 import { cn } from "@/lib/utils";
+import { ProductGridSkeleton } from "./product-grid-skeleton";
 
 /** Shared editorial grid rhythm for all product listings */
 export const productListingGridClassName = cn(
@@ -12,11 +13,10 @@ export const productListingGridClassName = cn(
 
 interface ProductGridProps {
   className?: string;
+  products: ProductViewModel[] | undefined;
 }
 
-export function ProductGrid({ className }: ProductGridProps) {
-  const products = getProductCardData();
-
+export function ProductGrid({ products, className }: ProductGridProps) {
   return (
     <section className={cn("w-full max-w-7xl mx-auto", className)}>
       <header className="mb-14 border-b border-border/60 pb-10 md:mb-20 md:pb-12">
@@ -30,7 +30,7 @@ export function ProductGrid({ className }: ProductGridProps) {
       </header>
 
       <div className={productListingGridClassName}>
-        {products.map((product) => (
+        {products?.map((product: ProductViewModel) => (
           <ProductCard
             key={product.slug}
             slug={product.slug}
@@ -38,7 +38,7 @@ export function ProductGrid({ className }: ProductGridProps) {
             origin={product.origin}
             description={product.description}
             price={product.price}
-            volume={product.volume}
+            size={product.size}
             imageSrc={product.imageSrc}
             heat={product.heat}
           />

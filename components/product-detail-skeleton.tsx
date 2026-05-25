@@ -15,7 +15,7 @@ export function ProductDetailSkeleton() {
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.32fr_1fr] lg:gap-20">
         <div className="space-y-3">
-          <Skeleton className="aspect-[4/5] min-h-[24rem] w-full rounded-sm lg:min-h-[34rem]" />
+          <Skeleton className="aspect-4/5 min-h-24 w-full rounded-sm lg:min-h-34" />
           <div className="grid grid-cols-4 gap-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="aspect-square w-full rounded-sm" />
@@ -55,7 +55,7 @@ export function ProductDetailSkeleton() {
           <div className="mt-12 border-t border-border/50 pt-10">
             <Skeleton className="h-3 w-16" />
             <div className="mt-4 flex flex-col gap-4 sm:flex-row">
-              <Skeleton className="h-14 w-full max-w-[10rem] rounded-sm" />
+              <Skeleton className="h-14 w-full max-w-10 rounded-sm" />
               <Skeleton className="h-14 flex-1 rounded-sm" />
             </div>
           </div>

@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/cart-mock";
+import { useRouter } from "next/navigation";
 
 interface CartOrderSummaryProps {
   subtotal: number;
@@ -16,6 +19,8 @@ export function CartOrderSummary({
 }: CartOrderSummaryProps) {
   const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
   const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+
+  const router = useRouter();
 
   return (
     <aside
@@ -60,6 +65,7 @@ export function CartOrderSummary({
       <Button
         size="lg"
         className="mt-8 h-12 w-full tracking-[0.16em] uppercase shadow-none transition-all duration-300 hover:brightness-[1.04]"
+        onClick={() => router.push("/checkout")}
       >
         Proceed to Checkout
       </Button>

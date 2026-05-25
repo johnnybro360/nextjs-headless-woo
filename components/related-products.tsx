@@ -1,15 +1,17 @@
 import { ProductCard } from "@/components/product-card";
-import type { Product } from "@/lib/products";
 import { productListingGridClassName } from "@/components/product-grid";
 import { cn } from "@/lib/utils";
+import { getProducts } from "@/lib/products";
 
 interface RelatedProductsProps {
-  products: Product[];
+  relatedProductIds: number[];
   className?: string;
 }
 
-export function RelatedProducts({ products, className }: RelatedProductsProps) {
-  if (products.length === 0) return null;
+export async function RelatedProducts({ relatedProductIds, className }: RelatedProductsProps) {
+  if (relatedProductIds.length === 0) return null;
+
+  const relatedProducts = await getProducts({params: {options: {id: relatedProductIds}}});
 
   return (
     <section
@@ -29,7 +31,7 @@ export function RelatedProducts({ products, className }: RelatedProductsProps) {
       </header>
 
       <div className={productListingGridClassName}>
-        {products.map((product) => (
+        {relatedProducts?.map((product) => (
           <ProductCard
             key={product.slug}
             slug={product.slug}
@@ -37,7 +39,7 @@ export function RelatedProducts({ products, className }: RelatedProductsProps) {
             origin={product.origin}
             description={product.description}
             price={product.price}
-            volume={product.volume}
+            size={product.size}
             imageSrc={product.imageSrc}
             heat={product.heat}
           />

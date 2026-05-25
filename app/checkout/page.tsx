@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { CartPage } from "@/components/cart/cart-page";
+import { CheckoutPage } from "@/components/checkout/checkout-page";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Your Cart | Ember & Oak",
-  description: "Review your artisan chilli sauce selection before checkout.",
+  title: "Checkout | Ember & Oak",
+  description: "Complete your artisan chilli sauce order.",
 };
 
-export default function CartRoutePage() {
+export default function CheckoutRoutePage() {
   return (
     <main className="min-h-screen px-5 sm:px-8 lg:px-10 py-12 md:py-16 lg:py-20">
-      <CartPage />
+      <CheckoutPage />
     </main>
   );
 }

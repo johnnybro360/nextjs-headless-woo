@@ -4,26 +4,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { MockCartLineItem } from "@/lib/cart-mock";
+import { CartItem } from "@/types/cartItem";
+import { useCartStore } from "@/stores/cart-store";
 
 interface CartLineItemProps {
-  item: MockCartLineItem;
-  onQuantityChange: (id: string, quantity: number) => void;
-  onRemove: (id: string) => void;
+  item: CartItem;
 }
 
 export function CartLineItem({
   item,
-  onQuantityChange,
-  onRemove,
-}: CartLineItemProps) {
+  }: CartLineItemProps) {
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+
+  const removeItem = useCartStore((state) => state.removeItem);
+
   const lineTotal = item.price * item.quantity;
 
   return (
     <article className="grid grid-cols-[5.5rem_1fr] gap-5 border-b border-border/50 py-8 sm:grid-cols-[6.5rem_1fr] sm:gap-8">
       <Link
         href={`/product/${item.slug}`}
-        className="relative aspect-[4/5] overflow-hidden rounded-sm bg-muted/20 ring-1 ring-border/60 transition-[ring-color] duration-300 hover:ring-primary/25"
+        className="relative aspect-4/5 overflow-hidden rounded-sm bg-muted/20 ring-1 ring-border/60 transition-[ring-color] duration-300 hover:ring-primary/25"
       >
         <Image
           src={item.imageSrc}
@@ -31,6 +32,7 @@ export function CartLineItem({
           fill
           className="object-cover object-center"
           sizes="104px"
+          unoptimized={true}
         />
       </Link>
 
@@ -54,7 +56,7 @@ export function CartLineItem({
           <div className="inline-flex h-10 items-stretch rounded-sm border border-border/70">
             <button
               type="button"
-              onClick={() => onQuantityChange(item.id, Math.max(1, item.quantity - 1))}
+              onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
               className="flex items-center px-3 text-muted-foreground transition-colors duration-300 hover:text-foreground"
               aria-label="Decrease quantity"
             >
@@ -65,7 +67,7 @@ export function CartLineItem({
             </span>
             <button
               type="button"
-              onClick={() => onQuantityChange(item.id, item.quantity + 1)}
+              onClick={() => updateQuantity(item.id, item.quantity + 1)}
               className="flex items-center px-3 text-muted-foreground transition-colors duration-300 hover:text-foreground"
               aria-label="Increase quantity"
             >
@@ -77,7 +79,7 @@ export function CartLineItem({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => onRemove(item.id)}
+            onClick={() => removeItem(item.id)}
             className="h-auto px-0 text-[13px] tracking-[0.04em] text-muted-foreground hover:bg-transparent hover:text-foreground"
           >
             <X className="mr-1.5 size-3.5" strokeWidth={1.25} />
