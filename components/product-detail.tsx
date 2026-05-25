@@ -140,11 +140,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
             name: product.fullName,
             description: product.description,
             image: product.imageSrc,
-            sku: product.id,
+            sku: product.sku,
             offers: {
               "@type": "Offer",
               price: product.price,
-              priceCurrency: "USD",
+              priceCurrency: "AUD",
               availability: product.inStock
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
