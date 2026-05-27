@@ -349,24 +349,24 @@ export function ProductDetail({ product }: ProductDetailProps) {
           >
             <p className="text-label mb-4">Quantity</p>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
-              <div className="inline-flex h-14 shrink-0 items-stretch rounded-sm border border-border/70">
+              <div className="flex h-14 w-full items-stretch rounded-sm border border-border/70 sm:w-auto sm:shrink-0">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={!product.inStock}
-                  className="flex w-12 items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-35"
+                  className="flex flex-1 items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-35 sm:w-12 sm:flex-none"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="size-4" strokeWidth={1.25} />
                 </button>
-                <span className="flex min-w-12 items-center justify-center border-x border-border/70 px-3 text-sm font-medium tabular-nums">
+                <span className="flex flex-1 items-center justify-center border-x border-border/70 px-3 text-sm font-medium tabular-nums sm:min-w-12 sm:flex-none">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => q + 1)}
                   disabled={!product.inStock}
-                  className="flex w-12 items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-35"
+                  className="flex flex-1 items-center justify-center text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:opacity-35 sm:w-12 sm:flex-none"
                   aria-label="Increase quantity"
                 >
                   <Plus className="size-4" strokeWidth={1.25} />
@@ -374,23 +374,18 @@ export function ProductDetail({ product }: ProductDetailProps) {
               </div>
 
               <Button
-                asChild
                 size="lg"
+                type="button"
+                onClick={handleAddToCart}
                 disabled={!product.inStock}
                 className={cn(
-                  "h-14 w-full flex-1 rounded-sm sm:min-w-0",
+                  "h-14 w-full rounded-sm sm:min-w-0 sm:flex-1",
                   "text-[13px] font-medium tracking-[0.16em] uppercase",
                   "shadow-none transition-all duration-300",
                   product.inStock && "hover:brightness-[1.04]",
                 )}
               >
-                {/* <Link href="/cart">
-                  {product.inStock ? "Add to Cart" : "Sold Out"}
-                </Link> */}
-
-                <button onClick={handleAddToCart} disabled={!product.inStock}>
-                  {product.inStock ? "Add to Cart" : "Sold Out"}
-                </button>
+                {product.inStock ? "Add to Cart" : "Sold Out"}
               </Button>
             </div>
           </div>
@@ -418,45 +413,48 @@ export function ProductDetail({ product }: ProductDetailProps) {
             </li>
           </ul>
 
+        
+        </div>
           {/* Editorial section switcher */}
           <div className={cn(sectionGap, "lg:mt-16")}>
-            <p className="text-label mb-8">Product information</p>
+            <div className="mx-auto w-full max-w-5xl">
+              <p className="text-label mb-8">Product information</p>
 
-            <Tabs
-              defaultValue="details"
-              orientation="vertical"
-              className="flex w-full flex-col gap-8 md:flex-row md:items-start md:gap-x-12 lg:gap-x-16"
-            >
-              <TabsList
-                variant="line"
-                className="flex! h-auto w-full shrink-0 flex-col items-stretch gap-0.5 bg-transparent p-0 md:w-48 lg:w-52"
+              <Tabs
+                defaultValue="details"
+                orientation="vertical"
+                className="flex w-full flex-col gap-8 md:flex-row md:items-start md:gap-x-10 lg:gap-x-14"
               >
-                <TabsTrigger value="details" className={tabTriggerClass}>
-                  <span className={tabIndexClass}>01</span>
-                  <span>Details</span>
-                </TabsTrigger>
-                <TabsTrigger value="ingredients" className={tabTriggerClass}>
-                  <span className={tabIndexClass}>02</span>
-                  <span>Ingredients</span>
-                </TabsTrigger>
-                <TabsTrigger value="shipping" className={tabTriggerClass}>
-                  <span className={tabIndexClass}>03</span>
-                  <span>Shipping</span>
-                </TabsTrigger>
-              </TabsList>
+                <TabsList
+                  variant="line"
+                  className="flex! h-auto w-full shrink-0 flex-col items-stretch gap-0.5 bg-transparent p-0 md:w-44 lg:w-52"
+                >
+                  <TabsTrigger value="details" className={tabTriggerClass}>
+                    <span className={tabIndexClass}>01</span>
+                    <span>Details</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="ingredients" className={tabTriggerClass}>
+                    <span className={tabIndexClass}>02</span>
+                    <span>Ingredients</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="shipping" className={tabTriggerClass}>
+                    <span className={tabIndexClass}>03</span>
+                    <span>Shipping</span>
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="details" className={tabsContentClass}>
-                <p className="max-w-prose">{product.details}</p>
-              </TabsContent>
-              <TabsContent value="ingredients" className={tabsContentClass}>
-                <p className="max-w-prose">{product.ingredients}</p>
-              </TabsContent>
-              <TabsContent value="shipping" className={tabsContentClass}>
-                <p className="max-w-prose">{product.shipping}</p>
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="details" className={tabsContentClass}>
+                  <p className="max-w-prose">{product.details}</p>
+                </TabsContent>
+                <TabsContent value="ingredients" className={tabsContentClass}>
+                  <p className="max-w-prose">{product.ingredients}</p>
+                </TabsContent>
+                <TabsContent value="shipping" className={tabsContentClass}>
+                  <p className="max-w-prose">{product.shipping}</p>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
-        </div>
       </div>
     </article>
   );

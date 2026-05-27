@@ -5,6 +5,7 @@ import {
 } from "@/types/wooProduct";
 
 import { WooProductVariation } from "@/types/wooProductVariation";
+import he from 'he';    // html entity decoder
 
 
 export enum HeatLevel {
@@ -28,8 +29,8 @@ export function mapWooProduct(product: WooProduct): ProductViewModel {
 
     origin: getAttribute(product.attributes, "Origin") ?? "Unknown",
 
-    description: stripHtml(product.short_description || ""),
-    longDescription: stripHtml(product.description || ""),
+    description: he.decode(stripHtml(product.short_description || "")),
+    longDescription: he.decode(stripHtml(product.description || "")),
 
     size: extractSize(product.name),
     onSale: product.on_sale,
@@ -56,14 +57,14 @@ export function mapWooProduct(product: WooProduct): ProductViewModel {
 
     tags: product.tags,
 
-    details: extractSection(product.description, "details"),
+    details: he.decode(extractSection(product.description, "details")),
 
-    ingredients: extractSection(
+    ingredients: he.decode(extractSection(
       product.description,
       "ingredients"
-    ),
+    )),
 
-    shipping: extractSection(product.description, "shipping"),
+    shipping: he.decode(extractSection(product.description, "shipping")),
 
     attributes:
       product.attributes?.map(
