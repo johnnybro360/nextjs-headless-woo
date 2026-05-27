@@ -53,38 +53,44 @@ interface ProductParams {
 
 export async function getProducts({params}: {params: ProductParams}): Promise<ProductViewModel[] | undefined> {
   try {
-    // const url = `${process.env.WC_URL}/wp-json/wc/v3/products?${new URLSearchParams(params.options as Record<string, string>).toString()}`;
+    const url = `${process.env.WC_URL}/wp-json/wc/v3/products${params.options ? `?${new URLSearchParams(params.options as Record<string, string>).toString()}` : ''}`;
 
-    // const requestData = {
-    //   url,
-    //   method: "GET",
-    // };
+    const requestData = {
+      url,
+      method: "GET",
+    };
 
-    // const authHeader = oauth.toHeader(
-    //   oauth.authorize(requestData)
-    // )  as unknown as HeadersInit;
+    console.log('requestData', requestData);
+
+    const authHeader = oauth.toHeader(
+      oauth.authorize(requestData)
+    )  as unknown as HeadersInit;
   
-    // const res = await fetch(url, {
-    //   headers: authHeader,
-    // });
-
-    const filterParams = new URLSearchParams(params.options as Record<string, string>);
-    wcAuthParams.forEach((value, key) => filterParams.append(key, value));
-
-    const url = `${process.env.WC_URL}/wp-json/wc/v3/products?${filterParams.toString()}`;
-
     const res = await fetch(url, {
-      headers: {
-        "Authorization": tunnelAuthHeader,
-        "Content-Type": "application/json",
-      },
+      headers: authHeader,
     });
+
+    console.log('res', res);
+
+    // const filterParams = new URLSearchParams(params.options as Record<string, string>);
+    // wcAuthParams.forEach((value, key) => filterParams.append(key, value));
+
+    // const url = `${process.env.WC_URL}/wp-json/wc/v3/products?${filterParams.toString()}`;
+
+    // const res = await fetch(url, {
+    //   headers: {
+    //     "Authorization": tunnelAuthHeader,
+    //     "Content-Type": "application/json",
+    //   },
+    // });
 
     if (!res.ok) {
       throw new Error("Failed to fetch products");
     }
 
     const data = await res.json();
+
+    console.log('data', data);
 
     return data.map(mapWooProduct);
 
@@ -96,33 +102,33 @@ export async function getProducts({params}: {params: ProductParams}): Promise<Pr
 
   export async function getProductBySlug(slug: string): Promise<ProductViewModel | undefined> {
     try {
-      // const url =
-      // `${process.env.WC_URL}/wp-json/wc/v3/products?slug=${slug}`;
+      const url =
+      `${process.env.WC_URL}/wp-json/wc/v3/products?slug=${slug}`;
 
-      // const requestData = {
-      //   url,
-      //   method: "GET",
-      // };
+      const requestData = {
+        url,
+        method: "GET",
+      };
 
-      // const authHeader = oauth.toHeader(
-      //   oauth.authorize(requestData)
-      // )  as unknown as HeadersInit;
+      const authHeader = oauth.toHeader(
+        oauth.authorize(requestData)
+      )  as unknown as HeadersInit;
 
-      // const res = await fetch(url, {
-      //   headers: authHeader,
-      // });
-
-      const queryParams = new URLSearchParams(wcAuthParams);
-      queryParams.append("slug", slug);
-  
-      const url = `${process.env.WC_URL}/wp-json/wc/v3/products?${queryParams.toString()}`;
-  
       const res = await fetch(url, {
-        headers: {
-          "Authorization": tunnelAuthHeader,
-          "Content-Type": "application/json",
-        },
+        headers: authHeader,
       });
+
+      // const queryParams = new URLSearchParams(wcAuthParams);
+      // queryParams.append("slug", slug);
+  
+      // const url = `${process.env.WC_URL}/wp-json/wc/v3/products?${queryParams.toString()}`;
+  
+      // const res = await fetch(url, {
+      //   headers: {
+      //     "Authorization": tunnelAuthHeader,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
       if (!res.ok) {
         throw new Error("Failed to fetch product");
@@ -140,29 +146,30 @@ export async function getProducts({params}: {params: ProductParams}): Promise<Pr
 
   export async function getVariationsByProductId(productId: string): Promise<ProductVariationViewModel | undefined> {
     try {
-      // const url =
-      // `${process.env.WC_URL}/wp-json/wc/v3/products/${productId}/variations`;
+      const url =
+      `${process.env.WC_URL}/wp-json/wc/v3/products/${productId}/variations`;
 
-      // const requestData = {
-      //   url,
-      //   method: "GET",
-      // };
+      const requestData = {
+        url,
+        method: "GET",
+      };
 
-      // const authHeader = oauth.toHeader(
-      //   oauth.authorize(requestData)
-      // )  as unknown as HeadersInit;
-
-      // const res = await fetch(url, {
-      //   headers: authHeader,
-      // });
-      const url = `${process.env.WC_URL}/wp-json/wc/v3/products/${productId}/variations?${wcAuthParams.toString()}`;
+      const authHeader = oauth.toHeader(
+        oauth.authorize(requestData)
+      )  as unknown as HeadersInit;
 
       const res = await fetch(url, {
-        headers: {
-          "Authorization": tunnelAuthHeader,
-          "Content-Type": "application/json",
-        },
+        headers: authHeader,
       });
+
+      // const url = `${process.env.WC_URL}/wp-json/wc/v3/products/${productId}/variations?${wcAuthParams.toString()}`;
+
+      // const res = await fetch(url, {
+      //   headers: {
+      //     "Authorization": tunnelAuthHeader,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
       if (!res.ok) {
         throw new Error("Failed to fetch product");

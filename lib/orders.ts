@@ -111,23 +111,23 @@ export async function createOrder(
   ) as unknown as HeadersInit;
 
   try {
-    // const res = await fetch(url, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     ...authHeader,
-    //   },
-    //   body: JSON.stringify(payload),
-    // });
-
-    const res = await fetch(`${url}?${wcAuthParams.toString()}`, {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `${tunnelAuthHeader}`,
+        ...authHeader,
       },
       body: JSON.stringify(payload),
     });
+
+    // const res = await fetch(`${url}?${wcAuthParams.toString()}`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `${tunnelAuthHeader}`,
+    //   },
+    //   body: JSON.stringify(payload),
+    // });
 
     const data = await res.json();
 
