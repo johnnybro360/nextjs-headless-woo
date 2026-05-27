@@ -17,6 +17,14 @@ interface ProductCardProps {
   heat?: string;
 }
 
+function truncateWithEllipsis(text: string, maxChars: number) {
+  if (text.length <= maxChars) {
+    return text;
+  }
+
+  return `${text.slice(0, maxChars).trimEnd()}...`;
+}
+
 export function ProductCard({
   slug,
   name,
@@ -28,6 +36,7 @@ export function ProductCard({
   heat,
 }: ProductCardProps) {
   const href = `/product/${slug}`;
+  const descriptionPreview = truncateWithEllipsis(description ?? "", 110);
 
   return (
     <Card
@@ -65,29 +74,33 @@ export function ProductCard({
         </div>
       </Link>
 
-      {/* Content — flex column for even card heights */}
+      {/* Content — fixed blocks + justify-between for even card rhythm */}
       <div className="flex flex-1 flex-col pt-6">
-        <Link href={href} className="block">
-          <h3
-            className={cn(
-              "font-display text-xl leading-snug tracking-[0.02em] text-foreground",
-              "transition-colors duration-300 group-hover:text-primary",
-            )}
-          >
-            {name}
-          </h3>
-        </Link>
+        <div className="flex min-h-44 flex-1 flex-col justify-between sm:min-h-48">
+          <div className="min-h-21 shrink-0">
+            <Link href={href} className="block">
+              <h3
+                className={cn(
+                  "line-clamp-2 min-h-13 font-display text-xl leading-snug tracking-[0.02em] text-foreground",
+                  "transition-colors duration-300 group-hover:text-primary",
+                )}
+              >
+                {name}
+              </h3>
+            </Link>
 
-        <p className="mt-2 text-label">
-          {origin} · {size}
-        </p>
+            <p className="mt-2 line-clamp-1 min-h-5 text-label">
+              {origin} · {size}
+            </p>
+          </div>
 
-        <p className="mt-4 min-h-2.75 flex-1 text-sm leading-1.7 text-muted-foreground line-clamp-2">
-          {description}
-        </p>
+          <p className="line-clamp-2 min-h-14 shrink-0 text-sm leading-7 text-muted-foreground">
+            {descriptionPreview}
+          </p>
+        </div>
 
         {/* Footer — price secondary, CTA aligned */}
-        <div className="mt-6 border-t border-border/60 pt-5">
+        <div className="mt-6 shrink-0 border-t border-border/60 pt-5">
           <p className="text-sm tracking-wide text-muted-foreground">
             <span className="tabular-nums">${price}</span>
           </p>
