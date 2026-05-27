@@ -212,8 +212,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
               className="object-cover object-center transition-opacity duration-500"
               sizes="(max-width: 1024px) 100vw, 60vw"
               priority
-              loading="eager"
-              unoptimized={true}
+            //   loading="eager"
+            //   unoptimized={true}
             />
           </div>
 
@@ -235,8 +235,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     className="object-cover object-center"
                     sizes="80px"
                     priority
-                    loading="eager"
-                    unoptimized={true}
+                    // loading="eager"
+                    // unoptimized={true}
                   />
                 </button>
               ))}

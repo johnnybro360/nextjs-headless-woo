@@ -44,7 +44,7 @@ export function CheckoutOrderSummary({
                 fill
                 className="object-cover object-center"
                 sizes="64px"
-                unoptimized
+                // unoptimized
               />
             </div>
             <div className="min-w-0 flex-1">

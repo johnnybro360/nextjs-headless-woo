@@ -32,7 +32,7 @@ export function CartLineItem({
           fill
           className="object-cover object-center"
           sizes="104px"
-          unoptimized={true}
+          // unoptimized={true}
         />
       </Link>
 

@@ -51,7 +51,7 @@ export async function CategoryPage() {
             origin={product.origin}
             description={product.description}
             price={product.price}
-            // volume={product.volume}
+            size={product.size}
             imageSrc={product.imageSrc}
             heat={product.heat}
           />
