@@ -1,185 +1,258 @@
 "use server";
 
-import OAuth from "oauth-1.0a";
-import crypto from "crypto";
 import { mapWooProduct, mapWooVariation } from "@/lib/mappers/productMapper";
-import { ProductViewModel, ProductVariationViewModel } from "@/types/productViewModel";
+import { wooFetch, type WooProductQueryParams } from "@/lib/woo-fetch";
+import {
+  getHeatLabel,
+  type ShopFilterOptions,
+} from "@/lib/product-filters";
+import type { WooProduct } from "@/types/wooProduct";
+import type { WooProductVariation } from "@/types/wooProductVariation";
+import {
+  ProductViewModel,
+  ProductVariationViewModel,
+} from "@/types/productViewModel";
 
-const oauth = new OAuth({
-  consumer: {
-    key: process.env.WC_KEY!,
-    secret: process.env.WC_SECRET!,
-  },
-  signature_method: "HMAC-SHA1",
-  hash_function(base_string: string, key: string) {
-    return crypto
-      .createHmac("sha1", key)
-      .update(base_string)
-      .digest("base64");
-  },
-});
-
-// 1. Generate the Basic Auth header for the Local WP Live Link tunnel
-const LIVE_LINK_USER = process.env.LOCAL_LIVE_LINK_USER!;
-const LIVE_LINK_PASS = process.env.LOCAL_LIVE_LINK_PASSWORD!;
-const tunnelAuthHeader = `Basic ${Buffer.from(`${LIVE_LINK_USER}:${LIVE_LINK_PASS}`).toString("base64")}`;
-
-// 2. Prepare WooCommerce credentials to append as query parameters
-const wcAuthParams = new URLSearchParams({
-  consumer_key: process.env.WC_KEY!,
-  consumer_secret: process.env.WC_SECRET!,
-});
-
-
-interface ProductFilters {
-  id?: number[];
-  per_page?: number;
-  featured?: boolean;
-  category?: string;
-  brand?: string;
-  tag?: string;
-  attribute?: string;
-  attribute_term?: string;
-  price?: string;
-  sort?: string;
-  order?: string;
-};
-
-
+export interface ProductsResult {
+  products: ProductViewModel[];
+  total: number;
+}
 
 interface ProductParams {
-  options?: ProductFilters | undefined;
+  options?: WooProductQueryParams;
 }
 
-export async function getProducts({params}: {params: ProductParams}): Promise<ProductViewModel[] | undefined> {
+type WooCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  count: number;
+};
+
+type WooBrand = {
+  id: number;
+  name: string;
+  slug: string;
+  count: number;
+};
+
+type WooAttribute = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
+type WooAttributeTerm = {
+  id: number;
+  name: string;
+  slug: string;
+  count: number;
+};
+
+export async function getProducts({
+  params,
+}: {
+  params: ProductParams;
+}): Promise<ProductsResult> {
   try {
-    const url = `${process.env.WC_URL}/wp-json/wc/v3/products${params.options ? `?${new URLSearchParams(params.options as Record<string, string>).toString()}` : ''}`;
-
-    const requestData = {
-      url,
-      method: "GET",
-    };
-
-    console.log('requestData', requestData);
-
-    const authHeader = oauth.toHeader(
-      oauth.authorize(requestData)
-    )  as unknown as HeadersInit;
-  
-    const res = await fetch(url, {
-      headers: authHeader,
+    const { data, headers } = await wooFetch<WooProduct[]>("/products", {
+      per_page: 100,
+      status: "publish",
+      ...params.options,
     });
 
-    console.log('res', res);
+    const total = Number(headers.get("X-WP-Total") ?? data.length);
 
-    // const filterParams = new URLSearchParams(params.options as Record<string, string>);
-    // wcAuthParams.forEach((value, key) => filterParams.append(key, value));
-
-    // const url = `${process.env.WC_URL}/wp-json/wc/v3/products?${filterParams.toString()}`;
-
-    // const res = await fetch(url, {
-    //   headers: {
-    //     "Authorization": tunnelAuthHeader,
-    //     "Content-Type": "application/json",
-    //   },
-    // });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch products");
-    }
-
-    const data = await res.json();
-
-    console.log('data', data);
-
-    return data.map(mapWooProduct);
-
+    return {
+      products: data.map(mapWooProduct),
+      total,
+    };
   } catch (error) {
     console.error("API Route Error:", error);
-    return []
+    return { products: [], total: 0 };
   }
 }
 
-  export async function getProductBySlug(slug: string): Promise<ProductViewModel | undefined> {
-    try {
-      const url =
-      `${process.env.WC_URL}/wp-json/wc/v3/products?slug=${slug}`;
+export async function getProductBySlug(
+  slug: string,
+): Promise<ProductViewModel | undefined> {
+  try {
+    const { data } = await wooFetch<WooProduct[]>("/products", {
+      slug,
+      status: "publish",
+    });
 
-      const requestData = {
-        url,
-        method: "GET",
-      };
+    return data.map(mapWooProduct)[0];
+  } catch (error) {
+    console.error("API Route Error:", error);
+    return undefined;
+  }
+}
 
-      const authHeader = oauth.toHeader(
-        oauth.authorize(requestData)
-      )  as unknown as HeadersInit;
+export async function getVariationsByProductId(
+  productId: string,
+): Promise<ProductVariationViewModel[] | undefined> {
+  try {
+    const { data } = await wooFetch<WooProductVariation[]>(
+      `/products/${productId}/variations`,
+    );
 
-      const res = await fetch(url, {
-        headers: authHeader,
-      });
+    return data.map(mapWooVariation);
+  } catch (error) {
+    console.error("API Route Error:", error);
+    return undefined;
+  }
+}
 
-      // const queryParams = new URLSearchParams(wcAuthParams);
-      // queryParams.append("slug", slug);
-  
-      // const url = `${process.env.WC_URL}/wp-json/wc/v3/products?${queryParams.toString()}`;
-  
-      // const res = await fetch(url, {
-      //   headers: {
-      //     "Authorization": tunnelAuthHeader,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
+async function getCategories(): Promise<WooCategory[]> {
+  try {
+    const { data } = await wooFetch<WooCategory[]>("/products/categories", {
+      per_page: 100,
+      hide_empty: true,
+      orderby: "name",
+      order: "asc",
+    });
 
-      if (!res.ok) {
-        throw new Error("Failed to fetch product");
-      }
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    return [];
+  }
+}
 
-      const data = await res.json();
+async function getBrands(): Promise<WooBrand[]> {
+  try {
+    const { data } = await wooFetch<WooBrand[]>("/products/brands", {
+      per_page: 100,
+      hide_empty: true,
+      orderby: "name",
+      order: "asc",
+    });
 
-      return data.map(mapWooProduct)[0];
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch brands:", error);
+    return [];
+  }
+}
 
-    } catch (error) {
-      console.error("API Route Error:", error);
-      return undefined;
+async function fetchAttributeTerms(
+  attributeId: number,
+): Promise<WooAttributeTerm[]> {
+  const path = `/products/attributes/${attributeId}/terms`;
+
+  try {
+    const { data } = await wooFetch<WooAttributeTerm[]>(path, {
+      per_page: 100,
+      orderby: "name",
+      order: "asc",
+    });
+    return data;
+  } catch {
+    const { data } = await wooFetch<WooAttributeTerm[]>(path, {
+      per_page: 100,
+    });
+    return data;
+  }
+}
+
+async function getHeatAttributeTerms(): Promise<{
+  attributeSlug?: string;
+  terms: WooAttributeTerm[];
+}> {
+  try {
+    const { data: attributes } = await wooFetch<WooAttribute[]>(
+      "/products/attributes",
+      {
+        per_page: 100,
+      },
+    );
+
+    const heatAttribute = attributes.find(
+      (attribute) =>
+        attribute.name.toLowerCase() === "heat" ||
+        attribute.slug === "pa_heat" ||
+        attribute.slug === "heat",
+    );
+
+    if (!heatAttribute) {
+      return { terms: [] };
     }
+
+    const terms = await fetchAttributeTerms(heatAttribute.id);
+
+    return {
+      attributeSlug: heatAttribute.slug,
+      terms,
+    };
+  } catch (error) {
+    console.error("Failed to fetch heat attribute terms:", error);
+    return { terms: [] };
+  }
+}
+
+function buildHeatLevelsFromProducts(
+  products: ProductViewModel[],
+): ShopFilterOptions["heatLevels"] {
+  const counts = new Map<string, number>();
+
+  for (const product of products) {
+    if (!product.heat) {
+      continue;
+    }
+    counts.set(product.heat, (counts.get(product.heat) ?? 0) + 1);
   }
 
-  export async function getVariationsByProductId(productId: string): Promise<ProductVariationViewModel | undefined> {
-    try {
-      const url =
-      `${process.env.WC_URL}/wp-json/wc/v3/products/${productId}/variations`;
+  return [...counts.entries()]
+    .sort(([a], [b]) => getHeatLabel(a).localeCompare(getHeatLabel(b)))
+    .map(([slug, count], index) => ({
+      id: index + 1,
+      slug,
+      label: getHeatLabel(slug),
+      count,
+    }));
+}
 
-      const requestData = {
-        url,
-        method: "GET",
-      };
+export async function getShopFilterOptions(): Promise<ShopFilterOptions> {
+  const [categories, brands, heatAttribute, priceBounds] = await Promise.all([
+    getCategories(),
+    getBrands(),
+    getHeatAttributeTerms(),
+    getProducts({
+      params: { options: { per_page: 100, orderby: "price", order: "asc" } },
+    }),
+  ]);
 
-      const authHeader = oauth.toHeader(
-        oauth.authorize(requestData)
-      )  as unknown as HeadersInit;
+  const prices = priceBounds.products.map((product) => product.price);
+  const heatFromTerms = heatAttribute.terms.map((term) => ({
+    id: term.id,
+    slug: term.slug,
+    label: term.name,
+    count: term.count,
+  }));
+  const heatFromProducts = buildHeatLevelsFromProducts(priceBounds.products);
+  const useClientHeatFilter =
+    heatFromTerms.length === 0 && heatFromProducts.length > 0;
 
-      const res = await fetch(url, {
-        headers: authHeader,
-      });
-
-      // const url = `${process.env.WC_URL}/wp-json/wc/v3/products/${productId}/variations?${wcAuthParams.toString()}`;
-
-      // const res = await fetch(url, {
-      //   headers: {
-      //     "Authorization": tunnelAuthHeader,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch product");
-      }
-
-      const data = await res.json();
-      return data.map(mapWooVariation);
-
-    } catch (error) {
-      console.error("API Route Error:", error);
-      return undefined;
-    }
-  }
+  return {
+    categories: categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      count: category.count,
+    })),
+    brands: brands.map((brand) => ({
+      id: brand.id,
+      name: brand.name,
+      slug: brand.slug,
+      count: brand.count,
+    })),
+    heatLevels: useClientHeatFilter ? heatFromProducts : heatFromTerms,
+    heatAttributeSlug: heatAttribute.attributeSlug,
+    heatFilterOnClient: useClientHeatFilter,
+    priceRange: {
+      min: prices.length > 0 ? Math.min(...prices) : 0,
+      max: prices.length > 0 ? Math.max(...prices) : 0,
+    },
+  };
+}

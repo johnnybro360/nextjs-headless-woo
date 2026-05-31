@@ -60,6 +60,7 @@ export type ProductViewModel = {
 
   sku: string;
   slug: string;
+  dateCreated: string;
 
   type: "simple" | "variable";
 

@@ -21,6 +21,7 @@ export function mapWooProduct(product: WooProduct): ProductViewModel {
 
     sku: product.sku,
     slug: product.slug,
+    dateCreated: product.date_created,
 
     type: product.type as "simple" | "variable",
 

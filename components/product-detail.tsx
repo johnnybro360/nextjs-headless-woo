@@ -30,6 +30,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import type { ProductBadge, ProductViewModel } from "@/types/productViewModel";
+import { buildShopCategoryHref } from "@/lib/product-filters";
 import { cn } from "@/lib/utils";
 
 const badgeIcons = {
@@ -176,17 +177,21 @@ export function ProductDetail({ product }: ProductDetailProps) {
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link
-                href={`/shop/${product.category[0].slug}`}
-                className="transition-colors duration-300 hover:text-foreground"
-              >
-                {product.category[0].name}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
+          {product.category[0] ? (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link
+                    href={buildShopCategoryHref(product.category[0].slug)}
+                    className="transition-colors duration-300 hover:text-foreground"
+                  >
+                    {product.category[0].name}
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+            </>
+          ) : null}
           <BreadcrumbItem>
             <BreadcrumbPage className="text-foreground/55">
               {product.fullName}

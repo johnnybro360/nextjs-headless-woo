@@ -2,7 +2,7 @@ import { getProducts } from "@/lib/products";
 
 export async function GET() {
   const baseUrl = process.env.PROD_URL;
-  const products = await getProducts({params: {options: undefined}});
+  const { products } = await getProducts({params: {options: undefined}});
 
   const urls = products?.map((p) => {
       const images = [p?.imageSrc, ...(p?.images || [])].filter(Boolean);

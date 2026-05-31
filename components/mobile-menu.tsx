@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import {
     Sheet,
     SheetContent,
@@ -8,9 +9,9 @@ import {
     SheetTrigger,
   } from "@/components/ui/sheet";
 import { Button } from "./ui/button";
-import { Menu } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import Link from "next/link";
-import { User } from "lucide-react";
+import { NavbarSearch } from "@/components/navbar-search";
 
 interface NavLink {
     href: string;
@@ -43,6 +44,11 @@ export function MobileMenu({ navLinks }: { navLinks: NavLink[] }) {
                           Ember & Oak
                         </SheetTitle>
                       </SheetHeader>
+                      <div className="border-b border-border/40 px-6 py-4">
+                        <Suspense fallback={null}>
+                          <NavbarSearch className="flex sm:hidden" />
+                        </Suspense>
+                      </div>
                       <nav className="flex flex-col px-4 py-6">
                         {navLinks.map((link) => (
                           <Link

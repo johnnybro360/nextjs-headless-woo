@@ -3,7 +3,7 @@ import { Hero } from "@/components/hero";
 import { getProducts } from "@/lib/products";
 
 export default async function Home() {
-  const products = await getProducts({params: {options: {featured: true}}});
+  const { products } = await getProducts({params: {options: {featured: true}}});
 
   return (
     <>

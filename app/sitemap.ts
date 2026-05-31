@@ -6,7 +6,7 @@ export const revalidate = 3600;
 export default async function sitemap() {
   const baseUrl = process.env.PROD_URL;
 
-  const products = await getProducts({params: {options: {}}});
+  const { products } = await getProducts({params: {options: {}}});
 
   const productUrls = products?.map((p) => ({
     url: `${baseUrl}/shop/${p.slug}`,

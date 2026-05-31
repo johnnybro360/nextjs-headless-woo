@@ -11,7 +11,9 @@ interface RelatedProductsProps {
 export async function RelatedProducts({ relatedProductIds, className }: RelatedProductsProps) {
   if (relatedProductIds.length === 0) return null;
 
-  const relatedProducts = await getProducts({params: {options: {id: relatedProductIds}}});
+  const { products } = await getProducts({
+    params: { options: { include: relatedProductIds } },
+  });
 
   return (
     <section
@@ -31,7 +33,7 @@ export async function RelatedProducts({ relatedProductIds, className }: RelatedP
       </header>
 
       <div className={productListingGridClassName}>
-        {relatedProducts?.map((product) => (
+        {products.map((product) => (
           <ProductCard
             key={product.slug}
             slug={product.slug}
