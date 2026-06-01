@@ -143,4 +143,44 @@
   .text-label {
     @apply text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground;
   }
+
+  .prose-static {
+    @apply space-y-6 text-base leading-relaxed text-muted-foreground;
+
+    & h2 {
+      @apply mt-10 text-xl tracking-[0.02em] text-foreground;
+    }
+
+    & h3 {
+      @apply mt-8 text-lg tracking-[0.02em] text-foreground;
+    }
+
+    & p {
+      @apply leading-relaxed;
+    }
+
+    & a {
+      @apply text-primary underline-offset-4 hover:underline;
+    }
+
+    & ul {
+      @apply list-disc space-y-2 pl-5;
+    }
+
+    & ol {
+      @apply list-decimal space-y-2 pl-5;
+    }
+
+    & img {
+      @apply h-auto max-w-full rounded-sm;
+    }
+
+    & figure {
+      @apply my-8;
+    }
+
+    & blockquote {
+      @apply border-l-2 border-border pl-4 italic text-foreground/80;
+    }
+  }
 }

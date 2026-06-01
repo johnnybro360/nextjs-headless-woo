@@ -23,6 +23,9 @@ export type CreateOrderSuccess = {
   orderId: number;
   orderNumber: string;
   paymentUrl?: string;
+  subtotal: string;
+  shippingTotal: string;
+  taxTotal: string;
   total: string;
 };
 
@@ -50,6 +53,9 @@ export type WooOrderResponse = {
   id: number;
   number: string;
   status: string;
+  subtotal: string;
+  shipping_total: string;
+  total_tax: string;
   total: string;
   payment_url?: string;
   order_key: string;

@@ -1,22 +1,22 @@
-import { getProducts } from "@/lib/products";
-// import { getAllPosts } from "@/lib/blog";
+import { getAllPublishedProducts } from "@/lib/products";
 
 export const revalidate = 3600;
 
 export default async function sitemap() {
   const baseUrl = process.env.PROD_URL;
 
-  const { products } = await getProducts({params: {options: {}}});
+  if (!baseUrl) {
+    return [];
+  }
 
-  const productUrls = products?.map((p) => ({
-    url: `${baseUrl}/shop/${p.slug}`,
-    lastModified: new Date(),
+  const products = await getAllPublishedProducts();
+
+  const productUrls = products.map((product) => ({
+    url: `${baseUrl}/product/${product.slug}`,
+    lastModified: product.dateCreated
+      ? new Date(product.dateCreated)
+      : new Date(),
   }));
-
-//   const blogUrls = posts.map((post) => ({
-//     url: `${baseUrl}/blog/${post.slug}`,
-//     lastModified: new Date(post.modified || post.date),
-//   }));
 
   return [
     {
@@ -27,11 +27,14 @@ export default async function sitemap() {
       url: `${baseUrl}/shop`,
       lastModified: new Date(),
     },
-    // {
-    //   url: `${baseUrl}/blog`,
-    //   lastModified: new Date(),
-    // },
-    ...(productUrls || [] as { url: string; lastModified: Date }[]),
-    // ...blogUrls,
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+    },
+    {
+      url: `${baseUrl}/policy`,
+      lastModified: new Date(),
+    },
+    ...productUrls,
   ];
 }

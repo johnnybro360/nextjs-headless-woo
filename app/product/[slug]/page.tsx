@@ -25,10 +25,8 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    console.log('slug',slug);
     const product = await getProductBySlug(slug);
-    console.log('product',product);
-  
+
     if (!product) {
       return { title: "Product Not Found | Ember & Oak" };
     }
@@ -52,7 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       },
   
       alternates: {
-        canonical: `${process.env.PROD_URL}/shop/${product.slug}`,
+        canonical: `${process.env.PROD_URL}/product/${product.slug}`,
       },
     };
   }
@@ -62,9 +60,7 @@ export default async function ProductPage({ params }: PageProps) {
   const product = await getProductBySlug(slug);
 
   const relatedProductIds = product?.related_ids ?? [];
-  
-  console.log('product',product);
-  
+
   if (!product) {
     notFound();
   }

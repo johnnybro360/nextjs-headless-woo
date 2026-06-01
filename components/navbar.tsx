@@ -2,18 +2,14 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
-import { Search, ShoppingBag, User } from "lucide-react";
+import { Search, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavbarSearch } from "@/components/navbar-search";
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "./mobile-menu";
 import { useCartStore } from "@/stores/cart-store";
 
-const navLinks = [
-  { href: "/shop", label: "Shop" },
-  { href: "/about", label: "About" },
-  { href: "/blog", label: "Blog" },
-];
+const navLinks = [{ href: "/shop", label: "Shop" }];
 
 const navLinkClass =
   "relative text-[13px] tracking-[0.04em] text-muted-foreground transition-colors duration-300 hover:text-foreground after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full";
@@ -53,14 +49,6 @@ export function Navbar() {
           >
             <NavbarSearch className="hidden sm:flex" />
           </Suspense>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Account"
-            className="hidden text-muted-foreground hover:bg-transparent hover:text-foreground md:flex"
-          >
-            <User className="size-1.125rem" strokeWidth={1.25} />
-          </Button>
           <Button
             variant="ghost"
             aria-label={`Cart, ${itemCount} ${itemCount === 1 ? "item" : "items"}`}

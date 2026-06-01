@@ -97,7 +97,7 @@ export function Footer() {
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link href="#" className="text-background/70 hover:text-background text-sm transition-colors">
+                <Link href="/about" className="text-background/70 hover:text-background text-sm transition-colors">
                   Our Story
                 </Link>
               </li>
@@ -165,7 +165,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-background/60">
           <p>&copy; {new Date().getFullYear()} Ember & Oak. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <Link href="#" className="hover:text-background transition-colors">
+            <Link href="/policy" className="hover:text-background transition-colors">
               Privacy
             </Link>
             <Link href="#" className="hover:text-background transition-colors">

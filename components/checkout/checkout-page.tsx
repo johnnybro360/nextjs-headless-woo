@@ -2,25 +2,36 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CartValidationAlert } from "@/components/cart/cart-validation-alert";
 import { CheckoutOrderSummary } from "@/components/checkout/checkout-order-summary";
+import { validateCart } from "@/lib/cart-actions";
+import { AU_COUNTRY_CODE, AU_STATES } from "@/lib/au-address";
 import { createOrder } from "@/lib/orders";
 import {
   checkoutSchema,
   type CheckoutSchemaValues,
 } from "@/lib/checkout-schema";
 import { useCartHydrated } from "@/hooks/use-cart-hydrated";
+import { useValidatedCart } from "@/hooks/use-validated-cart";
 import { useCartStore } from "@/stores/cart-store";
 import { cn } from "@/lib/utils";
 
 const inputClass = cn(
   "h-11 w-full rounded-sm border-border/70 bg-transparent px-3 text-sm",
   "placeholder:text-muted-foreground/60",
-  "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+  "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30",
 );
 
 function FormField({
@@ -54,10 +65,12 @@ export function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const hasHydrated = useCartHydrated();
-  const items = useCartStore((state) => state.items);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const { items, state, isLoading } = useValidatedCart();
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutSchemaValues>({
@@ -70,21 +83,19 @@ export function CheckoutPage() {
       address1: "",
       address2: "",
       city: "",
-      state: "",
+      state: undefined,
       postcode: "",
-      country: "AU",
+      country: AU_COUNTRY_CODE,
     },
   });
 
   const itemCount = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
-    [items]
+    [items],
   );
 
-  const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [items]
-  );
+  const totals = state.status === "ready" ? state.totals : null;
+  const validationErrors = state.status === "error" ? state.errors : [];
 
   useEffect(() => {
     if (hasHydrated && items.length === 0) {
@@ -94,6 +105,17 @@ export function CheckoutPage() {
 
   const onSubmit = async (values: CheckoutSchemaValues) => {
     setSubmitError(null);
+
+    const freshValidation = await validateCart(
+      items.map((item) => ({ id: item.id, quantity: item.quantity })),
+    );
+
+    if (!freshValidation.success) {
+      setSubmitError(
+        freshValidation.errors.map((entry) => entry.message).join(" "),
+      );
+      return;
+    }
 
     const result = await createOrder(items, {
       firstName: values.firstName,
@@ -108,12 +130,12 @@ export function CheckoutPage() {
       country: values.country,
     });
 
-    console.log('result', result);
-
     if (!result.success) {
       setSubmitError(result.error);
       return;
     }
+
+    clearCart();
 
     if (result.paymentUrl) {
       window.location.assign(result.paymentUrl);
@@ -123,6 +145,9 @@ export function CheckoutPage() {
     const params = new URLSearchParams({
       order_id: String(result.orderId),
       order_number: result.orderNumber,
+      subtotal: result.subtotal,
+      shipping: result.shippingTotal,
+      tax: result.taxTotal,
       total: result.total,
     });
 
@@ -145,10 +170,12 @@ export function CheckoutPage() {
           Delivery details
         </h1>
         <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
-          Enter your contact and shipping information. Your order is created in
-          WooCommerce — prices, stock, and totals are validated on the server.
+          Australian delivery only. Prices, stock, and totals are validated
+          against WooCommerce before your order is created.
         </p>
       </header>
+
+      <CartValidationAlert errors={validationErrors} />
 
       <div className="mt-10 grid grid-cols-1 gap-12 lg:mt-14 lg:grid-cols-[1fr_20rem] lg:gap-16 xl:grid-cols-[1fr_22rem]">
         <form
@@ -176,6 +203,7 @@ export function CheckoutPage() {
                   id="phone"
                   type="tel"
                   autoComplete="tel"
+                  placeholder="04xx xxx xxx"
                   className={inputClass}
                   {...register("phone")}
                 />
@@ -185,7 +213,7 @@ export function CheckoutPage() {
 
           <section className="space-y-6 border-t border-border/50 pt-10">
             <h2 className="font-display text-2xl tracking-[0.02em] text-foreground">
-              Shipping
+              Shipping (Australia)
             </h2>
             <div className="grid gap-5 sm:grid-cols-2">
               <FormField
@@ -237,7 +265,7 @@ export function CheckoutPage() {
             </FormField>
 
             <div className="grid gap-5 sm:grid-cols-2">
-              <FormField id="city" label="City" error={errors.city?.message}>
+              <FormField id="city" label="Suburb / city" error={errors.city?.message}>
                 <Input
                   id="city"
                   autoComplete="address-level2"
@@ -245,16 +273,30 @@ export function CheckoutPage() {
                   {...register("city")}
                 />
               </FormField>
-              <FormField
-                id="state"
-                label="State / region"
-                error={errors.state?.message}
-              >
-                <Input
-                  id="state"
-                  autoComplete="address-level1"
-                  className={inputClass}
-                  {...register("state")}
+              <FormField id="state" label="State" error={errors.state?.message}>
+                <Controller
+                  control={control}
+                  name="state"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id="state"
+                        className={cn(inputClass, "w-full")}
+                      >
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AU_STATES.map((state) => (
+                          <SelectItem key={state.code} value={state.code}>
+                            {state.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
               </FormField>
             </div>
@@ -268,21 +310,19 @@ export function CheckoutPage() {
                 <Input
                   id="postcode"
                   autoComplete="postal-code"
+                  inputMode="numeric"
+                  maxLength={4}
                   className={inputClass}
                   {...register("postcode")}
                 />
               </FormField>
-              <FormField
-                id="country"
-                label="Country code"
-                error={errors.country?.message}
-              >
+              <FormField id="country-display" label="Country">
                 <Input
-                  id="country"
-                  autoComplete="country"
-                  placeholder="AU"
-                  className={inputClass}
-                  {...register("country")}
+                  id="country-display"
+                  value="Australia"
+                  readOnly
+                  disabled
+                  className={cn(inputClass, "opacity-70")}
                 />
               </FormField>
             </div>
@@ -290,10 +330,9 @@ export function CheckoutPage() {
 
           <section className="rounded-sm border border-border/60 bg-muted/15 p-5">
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Payment method:{" "}
-              <span className="text-foreground">Direct bank transfer (BACS)</span>
-              . You will receive payment instructions after placing your order.
-              Stripe or other gateways can replace this later.
+              You will be redirected to{" "}
+              <span className="text-foreground">Stripe</span> to complete payment
+              securely after placing your order.
             </p>
           </section>
 
@@ -309,7 +348,7 @@ export function CheckoutPage() {
           <Button
             type="submit"
             size="lg"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isLoading || state.status === "error"}
             className="h-12 w-full tracking-[0.16em] uppercase shadow-none lg:hidden"
           >
             {isSubmitting ? "Placing order…" : "Place order"}
@@ -318,9 +357,11 @@ export function CheckoutPage() {
 
         <CheckoutOrderSummary
           items={items}
-          subtotal={subtotal}
+          totals={totals}
           itemCount={itemCount}
+          isLoading={isLoading}
           isSubmitting={isSubmitting}
+          checkoutDisabled={state.status === "error"}
         />
       </div>
     </div>

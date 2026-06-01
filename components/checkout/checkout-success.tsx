@@ -3,27 +3,38 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCartStore } from "@/stores/cart-store";
-import { useEffect } from "react";
+import { formatAud } from "@/lib/format";
 
 interface CheckoutSuccessProps {
   orderId?: string;
   orderNumber?: string;
+  subtotal?: string;
+  shipping?: string;
+  tax?: string;
   total?: string;
+}
+
+function formatWooAmount(value?: string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const amount = Number.parseFloat(value);
+  return Number.isFinite(amount) ? formatAud(amount) : `$${value}`;
 }
 
 export function CheckoutSuccess({
   orderId,
   orderNumber,
+  subtotal,
+  shipping,
+  tax,
   total,
 }: CheckoutSuccessProps) {
-  const clearCart = useCartStore(
-    (state) => state.clearCart
-  );
-
-  useEffect(() => {
-    clearCart();
-  }, [clearCart]);
+  const formattedSubtotal = formatWooAmount(subtotal);
+  const formattedShipping = formatWooAmount(shipping);
+  const formattedTax = formatWooAmount(tax);
+  const formattedTotal = formatWooAmount(total);
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col items-center px-4 py-20 text-center sm:py-28">
@@ -46,7 +57,7 @@ export function CheckoutSuccess({
         )}
       </p>
 
-      {(orderId || total) && (
+      {(orderId || formattedTotal) && (
         <dl className="mt-8 w-full rounded-sm border border-border/60 bg-card/30 p-6 text-left text-sm">
           {orderId ? (
             <div className="flex justify-between gap-4 py-2">
@@ -56,11 +67,33 @@ export function CheckoutSuccess({
               </dd>
             </div>
           ) : null}
-          {total ? (
-            <div className="flex justify-between gap-4 border-t border-border/50 py-2">
-              <dt className="text-muted-foreground">Total (Woo)</dt>
+          {formattedSubtotal ? (
+            <div className="flex justify-between gap-4 py-2">
+              <dt className="text-muted-foreground">Subtotal</dt>
+              <dd className="tabular-nums text-foreground">
+                {formattedSubtotal}
+              </dd>
+            </div>
+          ) : null}
+          {formattedShipping ? (
+            <div className="flex justify-between gap-4 py-2">
+              <dt className="text-muted-foreground">Shipping</dt>
+              <dd className="tabular-nums text-foreground">
+                {formattedShipping}
+              </dd>
+            </div>
+          ) : null}
+          {formattedTax ? (
+            <div className="flex justify-between gap-4 py-2">
+              <dt className="text-muted-foreground">GST</dt>
+              <dd className="tabular-nums text-foreground">{formattedTax}</dd>
+            </div>
+          ) : null}
+          {formattedTotal ? (
+            <div className="flex justify-between gap-4 border-t border-border/50 pt-3">
+              <dt className="text-muted-foreground">Total paid</dt>
               <dd className="font-display text-lg tabular-nums text-foreground">
-                ${total}
+                {formattedTotal}
               </dd>
             </div>
           ) : null}
@@ -68,9 +101,8 @@ export function CheckoutSuccess({
       )}
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        Bank transfer instructions will be sent to your email if configured in
-        WooCommerce. Cart totals on the storefront are for display only — Woo
-        calculated the final order total.
+        WooCommerce calculated the final total including GST and shipping. A
+        confirmation email will be sent if your store mail is configured.
       </p>
 
       <Button

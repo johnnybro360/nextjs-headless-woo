@@ -2,24 +2,26 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { OrderTotalsBreakdown } from "@/components/cart/order-totals-breakdown";
 import { cn } from "@/lib/utils";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/cart-mock";
+import type { CartTotalsBreakdown } from "@/types/cart-validation";
 import { useRouter } from "next/navigation";
 
 interface CartOrderSummaryProps {
-  subtotal: number;
+  totals: CartTotalsBreakdown | null;
   itemCount: number;
+  isLoading?: boolean;
+  checkoutDisabled?: boolean;
   className?: string;
 }
 
 export function CartOrderSummary({
-  subtotal,
+  totals,
   itemCount,
+  isLoading = false,
+  checkoutDisabled = false,
   className,
 }: CartOrderSummaryProps) {
-  const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-
   const router = useRouter();
 
   return (
@@ -27,44 +29,27 @@ export function CartOrderSummary({
       className={cn(
         "rounded-sm border border-border/60 bg-card/30 p-6 sm:p-8",
         "lg:sticky lg:top-24 lg:self-start",
-        className
+        className,
       )}
     >
       <h2 className="text-label">Order summary</h2>
 
-      <dl className="mt-6 space-y-4">
-        <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-sm text-muted-foreground">
-            Subtotal
-            <span className="ml-1 text-foreground/40">
-              ({itemCount} {itemCount === 1 ? "item" : "items"})
-            </span>
-          </dt>
-          <dd className="font-display text-xl tracking-[0.02em] text-foreground tabular-nums">
-            ${subtotal.toFixed(0)}
-          </dd>
-        </div>
-
-        <div className="border-t border-border/50 pt-4">
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {qualifiesForFreeShipping ? (
-              <>Standard shipping is complimentary on this order.</>
-            ) : (
-              <>
-                Add ${amountToFreeShipping.toFixed(0)} more for complimentary
-                standard shipping on orders over ${FREE_SHIPPING_THRESHOLD}.
-              </>
-            )}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground/80">
-            Shipping & taxes calculated at checkout.
-          </p>
-        </div>
-      </dl>
+      {isLoading || !totals ? (
+        <p className="mt-6 text-sm text-muted-foreground">
+          Checking prices and availability…
+        </p>
+      ) : (
+        <OrderTotalsBreakdown
+          totals={totals}
+          itemCount={itemCount}
+          className="mt-6"
+        />
+      )}
 
       <Button
         size="lg"
         className="mt-8 h-12 w-full tracking-[0.16em] uppercase shadow-none transition-all duration-300 hover:brightness-[1.04]"
+        disabled={isLoading || checkoutDisabled || !totals}
         onClick={() => router.push("/checkout")}
       >
         Proceed to Checkout

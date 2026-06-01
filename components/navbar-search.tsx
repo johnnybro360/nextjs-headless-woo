@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useShopNavigation } from "@/hooks/use-shop-navigation";
 import { cn } from "@/lib/utils";
 
 interface NavbarSearchProps {
@@ -18,13 +18,12 @@ interface NavbarSearchProps {
 }
 
 export function NavbarSearch({ className }: NavbarSearchProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchQuery, searchProducts } = useShopNavigation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   const openSearch = () => {
-    setQuery(searchParams.get("q") ?? "");
+    setQuery(searchQuery);
     setOpen(true);
   };
 
@@ -36,7 +35,7 @@ export function NavbarSearch({ className }: NavbarSearchProps) {
     }
 
     setOpen(false);
-    router.push(`/shop?q=${encodeURIComponent(trimmed)}`);
+    searchProducts(trimmed);
   };
 
   return (

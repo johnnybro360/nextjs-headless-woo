@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { CategoryFilters } from "@/components/category-filters";
 import { CategorySort } from "@/components/category-sort";
+import { ShopPagination } from "@/components/shop-pagination";
 import { ProductCardSkeleton } from "@/components/product-grid-skeleton";
 import { productListingGridClassName } from "@/components/product-grid";
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useShopNavigation } from "@/hooks/use-shop-navigation";
 import {
-  buildShopSearchParams,
-  defaultProductFilters,
+  DEFAULT_PRODUCTS_PER_PAGE,
   getActiveFilterCount,
+  getProductPageRange,
   hasActiveFilters,
-  type ProductFilterState,
-  type ProductSortOption,
   type ShopFilterOptions,
 } from "@/lib/product-filters";
 import type { ProductViewModel } from "@/types/productViewModel";
@@ -31,66 +30,61 @@ import { cn } from "@/lib/utils";
 interface CategoryProductListProps {
   products: ProductViewModel[];
   total: number;
+  totalPages: number;
+  currentPage: number;
   filterOptions: ShopFilterOptions;
-  filters: ProductFilterState;
-  sort: ProductSortOption;
-  searchQuery?: string;
 }
 
 export function CategoryProductList({
   products,
   total,
+  totalPages,
+  currentPage,
   filterOptions,
-  filters,
-  sort,
-  searchQuery = "",
 }: CategoryProductListProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
-  const applyQuery = useCallback(
-    (nextFilters: ProductFilterState, nextSort: ProductSortOption) => {
-      const params = buildShopSearchParams(nextFilters, nextSort, searchQuery);
-      const query = params.toString();
-      const href = query ? `${pathname}?${query}` : pathname;
-
-      startTransition(() => {
-        router.push(href, { scroll: false });
-      });
-    },
-    [pathname, router, searchQuery],
-  );
-
-  const handleFiltersChange = useCallback(
-    (nextFilters: ProductFilterState) => {
-      applyQuery(nextFilters, sort);
-    },
-    [applyQuery, sort],
-  );
-
-  const handleSortChange = useCallback(
-    (nextSort: ProductSortOption) => {
-      applyQuery(filters, nextSort);
-    },
-    [applyQuery, filters],
-  );
-
-  const handleClearFilters = useCallback(() => {
-    applyQuery(defaultProductFilters, sort);
-  }, [applyQuery, sort]);
+  const {
+    filters,
+    sort,
+    searchQuery,
+    isPending,
+    setFilters,
+    setSort,
+    setPage,
+    clearAllFilters,
+  } = useShopNavigation();
 
   const activeFilterCount = useMemo(
     () => getActiveFilterCount(filters),
     [filters],
   );
 
-  const productCountLabel = searchQuery
-    ? `${total} result${total === 1 ? "" : "s"} for “${searchQuery}”`
-    : hasActiveFilters(filters)
-      ? `Showing ${total} products`
-      : `${total} products`;
+  const { from, to } = getProductPageRange(
+    currentPage,
+    DEFAULT_PRODUCTS_PER_PAGE,
+    total,
+  );
+
+  const productCountLabel = (() => {
+    if (total === 0) {
+      return searchQuery ? `No results for “${searchQuery}”` : "No products";
+    }
+
+    const rangeLabel =
+      totalPages > 1 ? `Showing ${from}–${to} of ${total}` : `${total}`;
+
+    if (searchQuery) {
+      return `${rangeLabel} result${total === 1 ? "" : "s"} for “${searchQuery}”`;
+    }
+
+    if (hasActiveFilters(filters)) {
+      return `${rangeLabel} products`;
+    }
+
+    return totalPages > 1
+      ? `${rangeLabel} products`
+      : `${total} product${total === 1 ? "" : "s"}`;
+  })();
 
   return (
     <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-14 xl:gap-16">
@@ -99,7 +93,7 @@ export function CategoryProductList({
           <CategoryFilters
             filterOptions={filterOptions}
             filters={filters}
-            onChange={handleFiltersChange}
+            onChange={setFilters}
             disabled={isPending}
           />
         </div>
@@ -112,7 +106,7 @@ export function CategoryProductList({
           <div className="flex flex-wrap items-center gap-4">
             <CategorySort
               value={sort}
-              onChange={handleSortChange}
+              onChange={setSort}
               disabled={isPending}
             />
 
@@ -142,7 +136,7 @@ export function CategoryProductList({
                   <CategoryFilters
                     filterOptions={filterOptions}
                     filters={filters}
-                    onChange={handleFiltersChange}
+                    onChange={setFilters}
                     disabled={isPending}
                   />
                 </div>
@@ -153,26 +147,36 @@ export function CategoryProductList({
 
         {isPending ? (
           <div className={productListingGridClassName}>
-            {Array.from({ length: Math.max(products.length, 6) }).map((_, i) => (
+            {Array.from({ length: DEFAULT_PRODUCTS_PER_PAGE }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : products.length > 0 ? (
-          <div className={productListingGridClassName}>
-            {products.map((product) => (
-              <ProductCard
-                key={product.slug}
-                slug={product.slug}
-                name={product.name}
-                origin={product.origin}
-                description={product.description}
-                price={product.price}
-                size={product.size}
-                imageSrc={product.imageSrc}
-                heat={product.heat}
-              />
-            ))}
-          </div>
+          <>
+            <div className={productListingGridClassName}>
+              {products.map((product) => (
+                <ProductCard
+                  key={product.slug}
+                  slug={product.slug}
+                  name={product.name}
+                  origin={product.origin}
+                  description={product.description}
+                  price={product.price}
+                  size={product.size}
+                  imageSrc={product.imageSrc}
+                  heat={product.heat}
+                />
+              ))}
+            </div>
+
+            <ShopPagination
+              className="mt-14 md:mt-16"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              disabled={isPending}
+            />
+          </>
         ) : (
           <div
             className={cn(
@@ -189,7 +193,7 @@ export function CategoryProductList({
               type="button"
               variant="outline"
               className="mt-6 h-11 rounded-sm border-border/70"
-              onClick={handleClearFilters}
+              onClick={clearAllFilters}
             >
               Clear filters
             </Button>

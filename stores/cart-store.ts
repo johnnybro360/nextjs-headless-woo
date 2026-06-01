@@ -19,6 +19,8 @@ interface CartStore {
   ) => void;
 
   clearCart: () => void;
+
+  replaceItems: (items: CartItem[]) => void;
 }
 
 export const useCartStore =
@@ -75,6 +77,11 @@ export const useCartStore =
         clearCart: () =>
           set({
             items: [],
+          }),
+
+        replaceItems: (items) =>
+          set({
+            items,
           }),
       }),
       {

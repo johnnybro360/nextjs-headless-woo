@@ -104,25 +104,6 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   const [quantity, setQuantity] = useState(1);
 
-  console.log(product);
-  console.log("product.images", product.images);
-  console.log("product.badges", product.badges);
-  console.log("product.imgSrc", product.imageSrc);
-  //   console.log('product.compareAtPrice',product.compareAtPrice);
-  //   console.log('product.price',product.price);
-  //   console.log('product.inStock',product.inStock);
-  //   console.log('product.stockCount',product.stockCount);
-  //   console.log('product.size',product.size);
-  //   console.log('product.origin',product.origin);
-  //   console.log('product.fullName',product.fullName);
-  //   console.log('product.description',product.description);
-  //   console.log('product.longDescription',product.longDescription);
-  //   console.log('product.details',product.details);
-  //   console.log('product.ingredients',product.ingredients);
-  //   console.log('product.shipping',product.shipping);
-  //   console.log('product.attributes',product.attributes);
-  //   console.log('product.variations',product.variations);
-
   const discountPercent =
     product.compareAtPrice &&
     Math.round((1 - product.price / product.compareAtPrice) * 100);

@@ -17,7 +17,7 @@ export function CartEmptyState() {
         next favourite heat.
       </p>
 
-      <Button asChild size="lg" className="mt-10 h-12 min-w-[12rem] tracking-[0.14em] uppercase">
+      <Button asChild size="lg" className="mt-10 h-12 min-w-12 tracking-[0.14em] uppercase">
         <Link href="/shop">Browse Collection</Link>
       </Button>
     </div>

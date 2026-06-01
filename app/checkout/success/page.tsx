@@ -10,6 +10,9 @@ type PageProps = {
   searchParams: Promise<{
     order_id?: string;
     order_number?: string;
+    subtotal?: string;
+    shipping?: string;
+    tax?: string;
     total?: string;
   }>;
 };
@@ -24,6 +27,9 @@ export default async function CheckoutSuccessRoutePage({
       <CheckoutSuccess
         orderId={params.order_id}
         orderNumber={params.order_number}
+        subtotal={params.subtotal}
+        shipping={params.shipping}
+        tax={params.tax}
         total={params.total}
       />
     </main>

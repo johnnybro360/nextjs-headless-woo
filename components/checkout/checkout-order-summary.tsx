@@ -3,33 +3,37 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { OrderTotalsBreakdown } from "@/components/cart/order-totals-breakdown";
+import { formatAud } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/cart-mock";
+import type { CartTotalsBreakdown } from "@/types/cart-validation";
 import type { CartItem } from "@/types/cartItem";
 
 interface CheckoutOrderSummaryProps {
   items: CartItem[];
-  subtotal: number;
+  totals: CartTotalsBreakdown | null;
   itemCount: number;
+  isLoading?: boolean;
   isSubmitting?: boolean;
+  checkoutDisabled?: boolean;
   className?: string;
 }
 
 export function CheckoutOrderSummary({
   items,
-  subtotal,
+  totals,
   itemCount,
+  isLoading = false,
   isSubmitting,
+  checkoutDisabled = false,
   className,
 }: CheckoutOrderSummaryProps) {
-  const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
-
   return (
     <aside
       className={cn(
         "rounded-sm border border-border/60 bg-card/30 p-6 sm:p-8",
         "lg:sticky lg:top-24 lg:self-start",
-        className
+        className,
       )}
     >
       <h2 className="text-label">Order summary</h2>
@@ -44,7 +48,6 @@ export function CheckoutOrderSummary({
                 fill
                 className="object-cover object-center"
                 sizes="64px"
-                // unoptimized
               />
             </div>
             <div className="min-w-0 flex-1">
@@ -55,38 +58,30 @@ export function CheckoutOrderSummary({
                 {item.size} · Qty {item.quantity}
               </p>
               <p className="mt-1 text-sm tabular-nums text-foreground">
-                ${(item.price * item.quantity).toFixed(0)}
+                {formatAud(item.price * item.quantity)}
               </p>
             </div>
           </li>
         ))}
       </ul>
 
-      <dl className="mt-6 space-y-4 border-t border-border/50 pt-6">
-        <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-sm text-muted-foreground">
-            Subtotal
-            <span className="ml-1 text-foreground/40">
-              ({itemCount} {itemCount === 1 ? "item" : "items"})
-            </span>
-          </dt>
-          <dd className="font-display text-xl tracking-[0.02em] text-foreground tabular-nums">
-            ${subtotal.toFixed(0)}
-          </dd>
-        </div>
-
-        <p className="text-xs leading-relaxed text-muted-foreground/80">
-          {qualifiesForFreeShipping
-            ? "Standard shipping may be complimentary. Final shipping and tax are calculated by WooCommerce when your order is created."
-            : "Shipping and tax are calculated by WooCommerce when your order is created — not from cart totals shown here."}
+      {isLoading || !totals ? (
+        <p className="mt-6 border-t border-border/50 pt-6 text-sm text-muted-foreground">
+          Validating cart with WooCommerce…
         </p>
-      </dl>
+      ) : (
+        <OrderTotalsBreakdown
+          totals={totals}
+          itemCount={itemCount}
+          className="mt-6 border-t border-border/50 pt-6"
+        />
+      )}
 
       <Button
         type="submit"
         form="checkout-form"
         size="lg"
-        disabled={isSubmitting}
+        disabled={isSubmitting || isLoading || checkoutDisabled || !totals}
         className="mt-8 h-12 w-full tracking-[0.16em] uppercase shadow-none transition-all duration-300 hover:brightness-[1.04]"
       >
         {isSubmitting ? "Placing order…" : "Place order"}

@@ -9,7 +9,7 @@ import {
     SheetTrigger,
   } from "@/components/ui/sheet";
 import { Button } from "./ui/button";
-import { Menu, User } from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { NavbarSearch } from "@/components/navbar-search";
 
@@ -60,15 +60,6 @@ export function MobileMenu({ navLinks }: { navLinks: NavLink[] }) {
                           </Link>
                         ))}
                       </nav>
-                      <div className="mt-auto border-t border-border/60 px-6 py-6">
-                        <Link
-                          href="/account"
-                          className="inline-flex items-center gap-3 text-sm tracking-[0.02em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                        >
-                          <User className="size-1.125rem" strokeWidth={1.25} />
-                          Account
-                        </Link>
-                      </div>
                     </SheetContent>
                   </Sheet>
                 </div>

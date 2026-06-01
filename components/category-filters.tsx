@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -82,6 +82,76 @@ function FilterCheckboxRow({
   );
 }
 
+function PriceFilterInputs({
+  priceMin,
+  priceMax,
+  minPlaceholder,
+  maxPlaceholder,
+  disabled,
+  onPriceChange,
+}: {
+  priceMin: string;
+  priceMax: string;
+  minPlaceholder: string;
+  maxPlaceholder: string;
+  disabled: boolean;
+  onPriceChange: (priceMin: string, priceMax: string) => void;
+}) {
+  const [min, setMin] = useState(priceMin);
+  const [max, setMax] = useState(priceMax);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (min === priceMin && max === priceMax) {
+        return;
+      }
+
+      onPriceChange(min, max);
+    }, 400);
+
+    return () => window.clearTimeout(timeout);
+  }, [min, max, priceMin, priceMax, onPriceChange]);
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-2">
+        <Label htmlFor="filter-price-min" className="text-xs text-muted-foreground">
+          Min
+        </Label>
+        <Input
+          id="filter-price-min"
+          type="number"
+          min={0}
+          step="0.01"
+          inputMode="decimal"
+          disabled={disabled}
+          placeholder={minPlaceholder}
+          value={min}
+          onChange={(event) => setMin(event.target.value)}
+          className="h-10 rounded-sm border-border/70 bg-transparent px-3 text-sm"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="filter-price-max" className="text-xs text-muted-foreground">
+          Max
+        </Label>
+        <Input
+          id="filter-price-max"
+          type="number"
+          min={0}
+          step="0.01"
+          inputMode="decimal"
+          disabled={disabled}
+          placeholder={maxPlaceholder}
+          value={max}
+          onChange={(event) => setMax(event.target.value)}
+          className="h-10 rounded-sm border-border/70 bg-transparent px-3 text-sm"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function CategoryFilters({
   filterOptions,
   filters,
@@ -90,35 +160,6 @@ export function CategoryFilters({
   className,
 }: CategoryFiltersProps) {
   const active = hasActiveFilters(filters);
-  const [priceMin, setPriceMin] = useState(filters.priceMin);
-  const [priceMax, setPriceMax] = useState(filters.priceMax);
-  const filtersRef = useRef(filters);
-
-  filtersRef.current = filters;
-
-  useEffect(() => {
-    setPriceMin(filters.priceMin);
-    setPriceMax(filters.priceMax);
-  }, [filters.priceMin, filters.priceMax]);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      if (
-        priceMin === filtersRef.current.priceMin &&
-        priceMax === filtersRef.current.priceMax
-      ) {
-        return;
-      }
-
-      onChange({
-        ...filtersRef.current,
-        priceMin,
-        priceMax,
-      });
-    }, 400);
-
-    return () => window.clearTimeout(timeout);
-  }, [priceMin, priceMax, onChange]);
 
   const updateFilters = (partial: Partial<ProductFilterState>) => {
     onChange({ ...filters, ...partial });
@@ -162,42 +203,17 @@ export function CategoryFilters({
       </FilterSection>
 
       <FilterSection title="Price">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="filter-price-min" className="text-xs text-muted-foreground">
-              Min
-            </Label>
-            <Input
-              id="filter-price-min"
-              type="number"
-              min={0}
-              step="0.01"
-              inputMode="decimal"
-              disabled={disabled}
-              placeholder={`$${filterOptions.priceRange.min}`}
-              value={priceMin}
-              onChange={(event) => setPriceMin(event.target.value)}
-              className="h-10 rounded-sm border-border/70 bg-transparent px-3 text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="filter-price-max" className="text-xs text-muted-foreground">
-              Max
-            </Label>
-            <Input
-              id="filter-price-max"
-              type="number"
-              min={0}
-              step="0.01"
-              inputMode="decimal"
-              disabled={disabled}
-              placeholder={`$${filterOptions.priceRange.max}`}
-              value={priceMax}
-              onChange={(event) => setPriceMax(event.target.value)}
-              className="h-10 rounded-sm border-border/70 bg-transparent px-3 text-sm"
-            />
-          </div>
-        </div>
+        <PriceFilterInputs
+          key={`${filters.priceMin}-${filters.priceMax}`}
+          priceMin={filters.priceMin}
+          priceMax={filters.priceMax}
+          minPlaceholder={`$${filterOptions.priceRange.min}`}
+          maxPlaceholder={`$${filterOptions.priceRange.max}`}
+          disabled={disabled}
+          onPriceChange={(priceMin, priceMax) =>
+            updateFilters({ priceMin, priceMax })
+          }
+        />
       </FilterSection>
 
       {filterOptions.categories.length > 0 ? (

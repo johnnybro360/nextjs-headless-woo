@@ -55,6 +55,8 @@ export type ProductSortOption =
 
 export const defaultProductSort: ProductSortOption = "date-desc";
 
+export const DEFAULT_PRODUCTS_PER_PAGE = 10;
+
 export const productSortOptions: {
   value: ProductSortOption;
   label: string;
@@ -134,6 +136,14 @@ export function parseProductSearchParams(
   };
 }
 
+export function parseProductPage(
+  searchParams: Record<string, string | string[] | undefined>,
+): number {
+  const raw = parseStringParam(searchParams.page);
+  const page = Number.parseInt(raw, 10);
+  return Number.isFinite(page) && page > 0 ? page : 1;
+}
+
 export function parseProductSort(
   searchParams: Record<string, string | string[] | undefined>,
 ): ProductSortOption {
@@ -151,11 +161,16 @@ export function buildShopSearchParams(
   filters: ProductFilterState,
   sort: ProductSortOption,
   searchQuery = "",
+  page = 1,
 ): URLSearchParams {
   const params = new URLSearchParams();
 
   if (searchQuery) {
     params.set("q", searchQuery);
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
   }
 
   if (sort !== defaultProductSort) {
@@ -209,14 +224,31 @@ function mapSlugsToIds(
     .map(String);
 }
 
+export function getProductPageRange(
+  page: number,
+  perPage: number,
+  total: number,
+): { from: number; to: number } {
+  if (total === 0) {
+    return { from: 0, to: 0 };
+  }
+
+  const from = (page - 1) * perPage + 1;
+  const to = Math.min(page * perPage, total);
+  return { from, to };
+}
+
 export function productFiltersToWooParams(
   filters: ProductFilterState,
   sort: ProductSortOption,
   options: ShopFilterOptions,
   searchQuery = "",
+  page = 1,
+  perPage = DEFAULT_PRODUCTS_PER_PAGE,
 ): WooProductQueryParams {
   const params: WooProductQueryParams = {
-    per_page: 100,
+    per_page: perPage,
+    page,
     status: "publish",
   };
 
@@ -294,10 +326,10 @@ export function productFiltersToWooParams(
   return params;
 }
 
-export function applyClientHeatFilter(
-  products: { heat: string }[],
+export function applyClientHeatFilter<T extends { heat: string }>(
+  products: T[],
   filters: ProductFilterState,
-): { heat: string }[] {
+): T[] {
   if (filters.heatLevels.length === 0) {
     return products;
   }

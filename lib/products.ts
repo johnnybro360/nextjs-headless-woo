@@ -16,6 +16,9 @@ import {
 export interface ProductsResult {
   products: ProductViewModel[];
   total: number;
+  totalPages: number;
+  page: number;
+  perPage: number;
 }
 
 interface ProductParams {
@@ -56,21 +59,43 @@ export async function getProducts({
 }): Promise<ProductsResult> {
   try {
     const { data, headers } = await wooFetch<WooProduct[]>("/products", {
-      per_page: 100,
       status: "publish",
       ...params.options,
     });
 
     const total = Number(headers.get("X-WP-Total") ?? data.length);
+    const totalPages = Number(headers.get("X-WP-TotalPages") ?? 1);
+    const page = Number(params.options?.page ?? 1);
+    const perPage = Number(params.options?.per_page ?? data.length);
 
     return {
       products: data.map(mapWooProduct),
       total,
+      totalPages: totalPages > 0 ? totalPages : 1,
+      page,
+      perPage,
     };
   } catch (error) {
     console.error("API Route Error:", error);
-    return { products: [], total: 0 };
+    return { products: [], total: 0, totalPages: 1, page: 1, perPage: 10 };
   }
+}
+
+export async function getAllPublishedProducts(): Promise<ProductViewModel[]> {
+  const products: ProductViewModel[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const result = await getProducts({
+      params: { options: { per_page: 100, page, status: "publish" } },
+    });
+    products.push(...result.products);
+    totalPages = result.totalPages;
+    page += 1;
+  } while (page <= totalPages);
+
+  return products;
 }
 
 export async function getProductBySlug(
