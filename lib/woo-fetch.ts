@@ -1,5 +1,6 @@
 import OAuth from "oauth-1.0a";
 import crypto from "crypto";
+import { WC_CACHE_TAGS } from "@/lib/cache-tags";
 
 const oauth = new OAuth({
   consumer: {
@@ -67,6 +68,22 @@ export function buildWooQueryString(
   return searchParams.toString();
 }
 
+function getCacheTagsForPath(path: string): string[] {
+  if (path.startsWith("/products")) {
+    return [WC_CACHE_TAGS.products, WC_CACHE_TAGS.catalog];
+  }
+
+  if (
+    path.startsWith("/shipping") ||
+    path.startsWith("/taxes") ||
+    path.startsWith("/settings")
+  ) {
+    return [];
+  }
+
+  return [];
+}
+
 export async function wooFetch<T>(
   path: string,
   query?: Record<string, WooQueryValue>,
@@ -85,9 +102,14 @@ export async function wooFetch<T>(
     oauth.authorize(requestData),
   ) as unknown as HeadersInit;
 
+  const tags = getCacheTagsForPath(path);
+
   const res = await fetch(url, {
     headers: authHeader,
-    next: { revalidate: 60 },
+    next: {
+      revalidate: 3600,
+      ...(tags.length > 0 ? { tags } : {}),
+    },
   });
 
   if (!res.ok) {

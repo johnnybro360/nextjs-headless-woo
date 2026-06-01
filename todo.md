@@ -2,78 +2,91 @@
 
 Launch target: **Australia only · simple products · Stripe (via WooCommerce `payment_url`)**
 
+**Status: v1 launch complete** — store config, payments, shipping/GST, and E2E flow verified.
+
 ---
 
-## What’s already built
+## What’s built (v1)
 
 | Area | Status |
 |------|--------|
 | **Catalog** | Shop with WC-backed filters, sort, search, pagination |
 | **Product detail** | PDP, images, tabs, JSON-LD, related products |
 | **Cart** | Zustand + `localStorage`; server validation via `validateCart` / `getCartTotals` |
-| **Checkout** | AU-only form (state select, 4-digit postcode), Zod, WC order creation |
-| **Cart totals** | Subtotal, shipping, GST estimate from WC zones + tax settings (`lib/store-config.ts`) |
-| **Payments (code)** | `payment_method: stripe`, redirect to `payment_url` when present |
+| **Checkout** | AU-only form, Zod, WC order + `shipping_lines` |
+| **Cart totals** | Subtotal, shipping, GST estimates from WC zones + tax |
+| **Payments** | Stripe via `payment_url`; order total incl. shipping + GST |
 | **SEO** | Metadata, sitemaps, `/product/{slug}` URLs |
-| **CMS pages** | `/about`, `/policy` from WordPress pages |
-| **API layer** | OAuth `wooFetch`, `wpFetch`, mappers, server actions |
+| **CMS pages** | `/about`, `/policy` from WordPress |
+| **API layer** | OAuth `wooFetch`, `wpFetch`, server actions |
+| **Webhooks** | `POST /api/webhooks/woocommerce` → `revalidateTag` + `revalidatePath` on `product.*` |
 
 ---
 
-## Launch blockers (remaining)
+## Launch checklist (done)
 
-### 1. Stripe on WordPress (store config)
-
-- [ ] Install **WooCommerce Stripe Payment Gateway**
-- [ ] Currency **AUD**; test → live keys
-- [ ] End-to-end: order → Stripe redirect → paid in WP → email
-
-### 2. WooCommerce admin — shipping & GST
-
-Configure in WP so API totals match estimates:
-
-- [ ] **WooCommerce → Settings → General**: store address Australia, currency AUD
-- [ ] **WooCommerce → Settings → Tax**: enable tax, GST rate 10%, note if prices include tax
-- [ ] **WooCommerce → Settings → Shipping → Zones**: Australia zone
-  - Flat rate (e.g. $10) or local pickup
-  - Free shipping method with minimum order amount (e.g. $50)
-- [ ] Optional env fallbacks: `FREE_SHIPPING_THRESHOLD`, `FLAT_RATE_SHIPPING_COST`, `GST_RATE`
-
-### 3. Full path test
-
-- [ ] Browse → add to cart → cart shows WC prices + estimate
-- [ ] Checkout (AU address) → place order → Stripe → paid
-- [ ] Confirmation email; stock decrements in WP
-
-### 4. SSL & production host
-
-- [ ] Valid HTTPS on WordPress host (or dev `WC_URL` over HTTP)
-- [ ] Production env on Vercel: `WC_URL`, `WC_KEY`, `WC_SECRET`, `PROD_URL`
+- [x] WooCommerce Stripe Payment Gateway — AUD, test/live keys
+- [x] `WC_PAYMENT_METHOD=stripe` matches WP gateway
+- [x] E2E: cart → checkout → Stripe total = products + shipping + GST
+- [x] Orders paid in WP; confirmation email
+- [x] WC General / Tax / Shipping (AU zone, flat rate, free shipping)
+- [x] Full path test: validated cart, stock, WP order totals
+- [x] Production: `WC_URL`, keys, `PROD_URL` on Vercel
 
 ---
 
-## Post-launch / optional
+## What’s next (recommended order)
 
-| Item | Notes |
+### Phase A — Trust & polish (1–2 days)
+
+Low effort, high impact before marketing the site.
+
+| Priority | Task | Why |
+|----------|------|-----|
+| 1 | **Footer & CMS** | Wire or remove `#` links (Terms, FAQ, Shipping, Contact) → WP pages like `/about` |
+| 2 | **Analytics** | GA4 or Plausible on Next.js layout |
+| 3 | **Error monitoring** | Sentry (or similar) on checkout / `createOrder` failures |
+| 4 | **Legal copy** | Finalise About + Privacy in WordPress; add Shipping/Returns page if needed |
+
+### Phase B — Operations (when catalog changes often)
+
+| Priority | Task | Why |
+|----------|------|-----|
+| 6 | **Guest order lookup** | Success page or `/order-status` — email + order number → fetch order from WC REST |
+| 7 | **Abandoned orders** | Review pending/unpaid orders in WP; optional cleanup cron |
+
+Configure WC webhooks in production — see README **Webhooks** section.
+
+### Phase C — Growth features (pick by business need)
+
+| Feature | Scope |
+|---------|--------|
+| **Coupons** | `coupon_lines` on create order + apply field on cart/checkout |
+| **Reviews** | WC reviews API or Judge.me / etc. on PDP |
+| **Mini-cart** | Drawer instead of redirect to `/cart` |
+| **Customer accounts** | JWT or WP login plugin + `/account` orders & addresses |
+| **Variable products** | Variation picker on PDP, `variation_id` in cart/orders *(only if catalog needs it)* |
+
+### Phase D — Engineering hygiene
+
+| Task | Notes |
 |------|--------|
-| **Variable products** | PDP/cart/orders need `variation_id` |
-| **Customer accounts** | Login, order history |
-| **Webhooks** | Revalidate product cache on stock/price change |
-| **Coupons / reviews** | Not implemented |
-| **Footer placeholders** | Wire to WP pages or remove |
-| **Tests** | No e2e yet |
+| **E2E tests** | Playwright: shop → cart → checkout (mock or Stripe test mode) |
+| **README** | Replace create-next-app boilerplate with setup, env, deploy steps |
+| **HTTPS on WP** | Move `WC_URL` to HTTPS when host cert is stable |
 
 ---
 
 ## v1 definition of done
 
 - [x] Shop + PDP for simple products
-- [x] Cart validated against WC (`lib/cart-validation.ts`, `lib/cart-actions.ts`)
-- [x] Checkout AU only + server re-validation on submit
-- [x] Cart/checkout WC-backed total **estimates**; order returns WC **final** totals
-- [x] Stripe redirect via `payment_url` *(WP plugin required)*
-- [ ] Confirmation email *(WP mail)*
+- [x] Cart validated against WC
+- [x] Checkout AU only
+- [x] WC-backed estimates + `shipping_lines` on orders
+- [x] Stripe E2E verified
+- [x] Confirmation email
 - [x] Sitemap / CMS pages
+- [x] Production env deployed
 
 ---
 
@@ -82,15 +95,15 @@ Configure in WP so API totals match estimates:
 | Purpose | File |
 |---------|------|
 | Validate cart | `lib/cart-validation.ts`, `lib/cart-actions.ts` |
-| Shipping / GST config | `lib/store-config.ts`, `lib/cart-totals.ts` |
-| AU address rules | `lib/au-address.ts`, `lib/checkout-schema.ts` |
+| Shipping / GST | `lib/store-config.ts`, `lib/cart-totals.ts`, `lib/order-shipping.ts` |
 | Create order | `lib/orders.ts` |
-| Client hook | `hooks/use-validated-cart.ts` |
-| UI | `components/cart/order-totals-breakdown.tsx` |
+| AU checkout | `lib/au-address.ts`, `lib/checkout-schema.ts` |
+| Client cart | `hooks/use-validated-cart.ts` |
+| Webhook + revalidation | `app/api/webhooks/woocommerce/route.ts`, `lib/revalidate-catalog.ts` |
 
 ---
 
-## Env checklist
+## Env reference
 
 ```env
 WC_URL=https://your-store.com
@@ -103,7 +116,6 @@ WC_PAYMENT_METHOD_TITLE=Credit Card (Stripe)
 WP_PAGE_ABOUT_SLUG=about
 WP_PAGE_POLICY_SLUG=privacy-policy
 
-# Fallbacks if WC shipping/tax API unavailable
 FREE_SHIPPING_THRESHOLD=50
 FLAT_RATE_SHIPPING_COST=10
 GST_RATE=0.1
