@@ -87,6 +87,7 @@ function getCacheTagsForPath(path: string): string[] {
 export async function wooFetch<T>(
   path: string,
   query?: Record<string, WooQueryValue>,
+  options?: { noStore?: boolean },
 ): Promise<{ data: T; headers: Headers }> {
   const queryString = query ? buildWooQueryString(query) : "";
   const url = `${process.env.WC_URL}/wp-json/wc/v3${path}${
@@ -106,10 +107,14 @@ export async function wooFetch<T>(
 
   const res = await fetch(url, {
     headers: authHeader,
-    next: {
-      revalidate: 3600,
-      ...(tags.length > 0 ? { tags } : {}),
-    },
+    ...(options?.noStore
+      ? { cache: "no-store" }
+      : {
+          next: {
+            revalidate: 3600,
+            ...(tags.length > 0 ? { tags } : {}),
+          },
+        }),
   });
 
   if (!res.ok) {

@@ -136,6 +136,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/order-status" className="text-background/70 hover:text-background text-sm transition-colors">
+                  Track order
+                </Link>
+              </li>
+              <li>
                 <Link href="#" className="text-background/70 hover:text-background text-sm transition-colors">
                   FAQ
                 </Link>

@@ -178,6 +178,7 @@ lib/
   cart-actions.ts       # validateCart / getCartTotals
   order-shipping.ts     # shipping_lines for orders
   orders.ts             # createOrder
+  order-lookup.ts       # lookupGuestOrder
   store-config.ts       # Shipping zones + tax from WC
   revalidate-catalog.ts # Cache invalidation helper
   cache-tags.ts         # Fetch cache tag names
@@ -209,6 +210,7 @@ Ensure the WordPress server allows HTTPS requests from Vercel and REST API keys 
 | `/cart` | Shopping cart |
 | `/checkout` | Checkout |
 | `/checkout/success` | Order confirmation |
+| `/order-status` | Guest order lookup (email + order number) |
 | `/about` | About (WordPress page) |
 | `/policy` | Privacy policy (WordPress page) |
 | `/sitemap.xml` | Sitemap |

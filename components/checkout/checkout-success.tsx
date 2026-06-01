@@ -105,13 +105,29 @@ export function CheckoutSuccess({
         confirmation email will be sent if your store mail is configured.
       </p>
 
-      <Button
-        asChild
-        size="lg"
-        className="mt-10 h-12 min-w-[12rem] tracking-[0.14em] uppercase"
-      >
-        <Link href="/shop">Continue shopping</Link>
-      </Button>
+      <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        {orderNumber ? (
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="h-12 min-w-[12rem] tracking-[0.14em] uppercase"
+          >
+            <Link
+              href={`/order-status?order_number=${encodeURIComponent(orderNumber)}`}
+            >
+              Track this order
+            </Link>
+          </Button>
+        ) : null}
+        <Button
+          asChild
+          size="lg"
+          className="h-12 min-w-[12rem] tracking-[0.14em] uppercase"
+        >
+          <Link href="/shop">Continue shopping</Link>
+        </Button>
+      </div>
     </div>
   );
 }
